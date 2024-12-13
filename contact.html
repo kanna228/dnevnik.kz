@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Форма отправки сообщения</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <header class="header">
+        <a href="/" class="logo">Dnevnik.kz</a>
+        <nav>
+            <ul>
+                <li><a href="/schedule">Расписание</a></li>
+                <li><a href="/teachers">Учителя</a></li>
+                <li><a href="/login">Войти</a></li>
+                <li><a href="/about">О нас</a></li>
+                <li><a href="/contact">Связаться с нами</a></li>
+            </ul>
+        </nav>
+    </header>
+    <h1>Связаться с нами</h1>
+    <form id="messageForm" action="/api" method="POST">
+        <label for="message">Сообщение:</label><br>
+        <input type="text" id="message" name="message"><br><br>
+        <label for="email">Почта:</label><br>
+        <input type="email" id="email" name="email"><br><br>
+        <button type="submit">Отправить</button>
+    </form>
+
+    <h2>Ответ от сервера:</h2>
+    <div id="response"></div>
+
+    <script>
+        // Обработчик отправки формы
+        document.getElementById("messageForm").addEventListener("submit", function(event) {
+            event.preventDefault(); // Остановить стандартную отправку формы
+
+            const message = document.getElementById("message").value;
+            const email = document.getElementById("email").value;
+
+            // Проверка корректности email
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                document.getElementById("response").innerHTML = `<strong>Ошибка:</strong> Неверный формат email`;
+                return;
+            }
+
+            // Отправляем данные методом POST
+            fetch('/api', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ message: message, email: email }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Показать ответ на странице
+                document.getElementById("response").innerHTML = `
+                    <strong>Status:</strong> ${data.status} <br>
+                    <strong>Message:</strong> ${data.message}
+                `;
+            })
+            .catch(error => {
+                document.getElementById("response").innerHTML = `
+                    <strong>Ошибка:</strong> ${error.message}
+                `;
+            });
+        });
+    </script>
+</body>
+</html>

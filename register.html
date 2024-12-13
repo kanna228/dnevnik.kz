@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Регистрация</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <!-- Хедер -->
+    <header class="header">
+        <a href="/" class="logo">Dnevnik.kz</a>
+        <nav>
+            <ul>
+                <li><a href="/schedule">Расписание</a></li>
+                <li><a href="/teachers">Учителя</a></li>
+                <li><a href="/login">Войти</a></li>
+                <li><a href="/about">О нас</a></li>
+                <li><a href="/contact">Связаться с нами</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- Основной контент -->
+    <main>
+        <h1>Регистрация</h1>
+        <form action="/register" method="POST">
+            <label for="username">Имя пользователя:</label>
+            <input type="text" id="username" name="username" required>
+
+            <label for="password">Пароль:</label>
+            <input type="password" id="password" name="password" required>
+
+            <label for="role">Выберите роль:</label>
+            <select id="role" name="role" required>
+                <option value="student">Ученик</option>
+                <option value="teacher">Учитель</option>
+            </select>
+
+            <button type="submit" class="btn">Зарегистрироваться</button>
+        </form>
+    </main>
+</body>
+</html>
