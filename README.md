@@ -1,5 +1,3 @@
-![image](https://github.com/user-attachments/assets/cf05a94d-9efb-426e-a6b3-41cd4836aa1e)# Dnevnik.kz
-
 Dnevnik.kz is a web-based portal designed to assist students and teachers by providing a centralized platform for managing lessons, student accounts, and educational activities. This project was developed to simplify the organization of educational workflows while allowing users to log in and view relevant content based on their roles (Student or Teacher).
 
 ---
