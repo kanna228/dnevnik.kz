@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>dnevnik.kz</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        h1, h2 {
+            color: #333;
+        }
+        form {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input, button {
+            margin-bottom: 10px;
+            padding: 8px;
+            width: 100%;
+            max-width: 300px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f4f4f4;
+        }
+    </style>
+</head>
+<body>
+    <!-- Хедер -->
+    <header class="header">
+        <a href="/" class="logo">Dnevnik.kz</a>
+        <nav>
+            <ul>
+                <li><a href="/list">Список</a></li>
+                <li><a href="/teachers">Учителя</a></li>
+                <li><a href="/login">Войти</a></li>
+                <li><a href="/about">О нас</a></li>
+                <li><a href="/contact">Связаться с нами</a></li>
+            </ul>
+        </nav>
+    </header>
+    <!-- првоерка -->
+    <!-- Основной контент -->
+     <!-- Ghjlkdsjfl -->
+     <h1>Manage Students</h1>
+     <h2>Create New Student</h2>
+     <form id="createStudentForm">
+         <label for="name">Name:</label>
+         <input type="text" id="name" required>
+ 
+         <label for="email">Email:</label>
+         <input type="email" id="email" required>
+ 
+         <label for="message">Message:</label>
+         <input type="text" id="message" required>
+ 
+         <button type="submit">Create Student</button>
+     </form>
+ 
+     <h2>Students List</h2>
+     <table id="studentsTable">
+         <thead>
+             <tr>
+                 <th>ID</th>
+                 <th>Name</th>
+                 <th>Email</th>
+                 <th>Message</th>
+                 <th>Actions</th>
+             </tr>
+         </thead>
+         <tbody>
+             <!-- Students will load here -->
+         </tbody>
+     </table>
+ 
+     <script>
+         const API_BASE = "http://localhost:8080/api/users";
+ 
+         // CREATE Student
+         document.getElementById("createStudentForm").addEventListener("submit", async (e) => {
+             e.preventDefault();
+ 
+             const name = document.getElementById("name").value;
+             const email = document.getElementById("email").value;
+             const message = document.getElementById("message").value;
+ 
+             const response = await fetch(`${API_BASE}/create`, {
+                 method: "POST",
+                 headers: { "Content-Type": "application/json" },
+                 body: JSON.stringify({ name, email, message }),
+             });
+ 
+             if (response.ok) {
+                 alert("Student created successfully!");
+                 loadStudents();
+             } else {
+                 alert("Failed to create student");
+             }
+         });
+ 
+         // READ Students
+         async function loadStudents() {
+             const response = await fetch(`${API_BASE}/all`);
+             const students = await response.json();
+             const tableBody = document.querySelector("#studentsTable tbody");
+             tableBody.innerHTML = "";
+ 
+             students.forEach((student) => {
+                 const row = document.createElement("tr");
+                 row.innerHTML = `
+                     <td>${student.id}</td>
+                     <td>${student.name}</td>
+                     <td>${student.email}</td>
+                     <td>${student.message}</td>
+                     <td>
+                         <button onclick="deleteStudent('${student.id}')">Delete</button>
+                         <button onclick="updateStudent('${student.id}')">Update</button>
+                     </td>
+                 `;
+                 tableBody.appendChild(row);
+             });
+         }
+ 
+         // DELETE Student
+         async function deleteStudent(id) {
+             if (!confirm("Are you sure you want to delete this student?")) return;
+ 
+             const response = await fetch(`${API_BASE}/delete?id=${id}`, {
+                 method: "DELETE",
+             });
+ 
+             if (response.ok) {
+                 alert("Student deleted successfully!");
+                 loadStudents();
+             } else {
+                 alert("Failed to delete student");
+             }
+         }
+ 
+         // UPDATE Student
+         async function updateStudent(id) {
+             const name = prompt("Enter new name:");
+             const email = prompt("Enter new email:");
+             const message = prompt("Enter new message:");
+ 
+             if (!name || !email || !message) return alert("All fields are required!");
+ 
+             const response = await fetch(`${API_BASE}/update?id=${id}`, {
+                 method: "PUT",
+                 headers: { "Content-Type": "application/json" },
+                 body: JSON.stringify({ name, email, message }),
+             });
+ 
+             if (response.ok) {
+                 alert("Student updated successfully!");
+                 loadStudents();
+             } else {
+                 alert("Failed to update student");
+             }
+         }
+ 
+         // Initial Load
+         loadStudents();
+     </script>
+</body>
+</html>

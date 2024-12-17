@@ -46,6 +46,10 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "contact.html")
 }
 
+func list(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, "list.html")
+}
+
 // Original POST Handler
 func postHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
@@ -210,6 +214,7 @@ func main() {
 	http.HandleFunc("/register", register_page)
 	http.HandleFunc("/contact", handler)
 	http.HandleFunc("/api", postHandler)
+	http.HandleFunc("/list", list)
 
 	// CRUD Routes
 	http.HandleFunc("/api/users/create", createUser)
