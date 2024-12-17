@@ -192,6 +192,9 @@ func deleteUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	fs := http.FileServer(http.Dir("./static")) // Указываем папку "static"
+	http.Handle("/static/", http.StripPrefix("/static/", fs))
+
 	// Connect to MongoDB
 	var err error
 	client, err = ConnectToMongoDB()
