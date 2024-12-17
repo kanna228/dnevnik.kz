@@ -14,10 +14,11 @@ import (
 
 // MongoDB User Model
 type User struct {
-	ID      primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`
-	Name    string             `bson:"name" json:"name"`
-	Email   string             `bson:"email" json:"email"`
-	Message string             `bson:"message" json:"message"`
+	ID       primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`
+	Name     string             `bson:"name" json:"name"`
+	Email    string             `bson:"email" json:"email"`
+	Password string             `bson:"password" json:"password"`
+	Role     string             `bson:"role" json:"role"` // New field for role
 }
 
 // ResponseData structure
@@ -93,6 +94,7 @@ func postHandler(w http.ResponseWriter, r *http.Request) {
 
 // Create a user
 func createUser(w http.ResponseWriter, r *http.Request) {
+
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -100,8 +102,14 @@ func createUser(w http.ResponseWriter, r *http.Request) {
 
 	var user User
 	err := json.NewDecoder(r.Body).Decode(&user)
-	if err != nil || user.Name == "" || user.Email == "" || user.Message == "" {
+	if err != nil || user.Name == "" || user.Email == "" || user.Password == "" || user.Role == "" {
 		http.Error(w, "Invalid input data", http.StatusBadRequest)
+		return
+	}
+
+	// You could add validation for role, if needed
+	if user.Role != "teacher" && user.Role != "student" {
+		http.Error(w, "Invalid role, must be 'teacher' or 'student'", http.StatusBadRequest)
 		return
 	}
 
@@ -113,6 +121,42 @@ func createUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user.ID = result.InsertedID.(primitive.ObjectID)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(user)
+}
+
+// GET handler to retrieve a user by ID
+func getUserByID(w http.ResponseWriter, r *http.Request) {
+	// Ensure it's a GET request
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// Extract ID from the query parameter
+	idParam := r.URL.Query().Get("id")
+	if idParam == "" {
+		http.Error(w, "ID parameter is required", http.StatusBadRequest)
+		return
+	}
+
+	// Convert ID to MongoDB ObjectID
+	objID, err := primitive.ObjectIDFromHex(idParam)
+	if err != nil {
+		http.Error(w, "Invalid ID format", http.StatusBadRequest)
+		return
+	}
+
+	// Find the user in MongoDB
+	collection := client.Database("your_db_name").Collection("users")
+	var user User
+	err = collection.FindOne(context.Background(), bson.M{"_id": objID}).Decode(&user)
+	if err != nil {
+		http.Error(w, "User not found", http.StatusNotFound)
+		return
+	}
+
+	// Return the user as JSON
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(user)
 }
@@ -161,9 +205,9 @@ func updateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	update := bson.M{"$set": bson.M{
-		"name":    updateData.Name,
-		"email":   updateData.Email,
-		"message": updateData.Message,
+		"name":     updateData.Name,
+		"email":    updateData.Email,
+		"password": updateData.Password,
 	}}
 
 	collection := client.Database("your_db_name").Collection("users")
@@ -221,6 +265,7 @@ func main() {
 	http.HandleFunc("/api/users/all", getAllUsers)
 	http.HandleFunc("/api/users/update", updateUser)
 	http.HandleFunc("/api/users/delete", deleteUser)
+	http.HandleFunc("/api/users/get", getUserByID)
 
 	// Start Server
 	fmt.Println("Server running at http://localhost:8080")

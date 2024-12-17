@@ -59,20 +59,42 @@
     <!-- првоерка -->
     <!-- Основной контент -->
      <!-- Ghjlkdsjfl -->
-     <h1>Manage Students</h1>
-     <h2>Create New Student</h2>
-     <form id="createStudentForm">
+     <form id="createStudentForm" style="display: none;">
          <label for="name">Name:</label>
          <input type="text" id="name" required>
  
          <label for="email">Email:</label>
          <input type="email" id="email" required>
  
-         <label for="message">Message:</label>
-         <input type="text" id="message" required>
+         <label for="password">Password:</label>
+         <input type="text" id="password" required>
  
          <button type="submit">Create Student</button>
      </form>
+
+     <h2>Search Student by ID</h2>
+    <form id="searchStudentForm">
+        <label for="searchId">Student ID:</label>
+        <input type="text" id="searchId" placeholder="Enter Student ID" required>
+        <button type="submit">Search</button>
+    </form>
+
+    <h3>Search Result</h3>
+    <table id="searchResultTable" style="display: none;">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Password</th>
+                <th>Role</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Search result will appear here -->
+        </tbody>
+    </table>
+
  
      <h2>Students List</h2>
      <table id="studentsTable">
@@ -81,7 +103,8 @@
                  <th>ID</th>
                  <th>Name</th>
                  <th>Email</th>
-                 <th>Message</th>
+                 <th>Password</th>
+                 <th>Role</th> 
                  <th>Actions</th>
              </tr>
          </thead>
@@ -99,12 +122,13 @@
  
              const name = document.getElementById("name").value;
              const email = document.getElementById("email").value;
-             const message = document.getElementById("message").value;
+             const password = document.getElementById("password").value;
+             const role = document.getElementById("role").value; 
  
              const response = await fetch(`${API_BASE}/create`, {
                  method: "POST",
                  headers: { "Content-Type": "application/json" },
-                 body: JSON.stringify({ name, email, message }),
+                 body: JSON.stringify({ name, email, password, role }),
              });
  
              if (response.ok) {
@@ -128,7 +152,8 @@
                      <td>${student.id}</td>
                      <td>${student.name}</td>
                      <td>${student.email}</td>
-                     <td>${student.message}</td>
+                     <td>${student.password}</td>
+                     <td>${student.role}</td>
                      <td>
                          <button onclick="deleteStudent('${student.id}')">Delete</button>
                          <button onclick="updateStudent('${student.id}')">Update</button>
@@ -137,6 +162,52 @@
                  tableBody.appendChild(row);
              });
          }
+
+         // SEARCH Student by ID
+        document.getElementById("searchStudentForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const searchId = document.getElementById("searchId").value.trim();
+
+            if (!searchId) {
+                alert("Please enter a valid Student ID");
+                return;
+            }
+
+            const response = await fetch(`${API_BASE}/get?id=${searchId}`, {
+                method: "GET",
+                headers: { "Content-Type": "application/json" },
+            });
+
+            const resultTable = document.getElementById("searchResultTable");
+            const tableBody = resultTable.querySelector("tbody");
+            tableBody.innerHTML = ""; // Clear previous results
+
+            if (response.ok) {
+                const student = await response.json();
+                
+                if (student) {
+                    // Populate table with student data
+                    const row = document.createElement("tr");
+                    row.innerHTML = `
+                        <td>${student.id}</td>
+                        <td>${student.name}</td>
+                        <td>${student.email}</td>
+                        <td>${student.password}</td>
+                        <td>${student.role}</td>
+                    `;
+                    tableBody.appendChild(row);
+                    resultTable.style.display = "table";
+                } else {
+                    alert("Student not found!");
+                    resultTable.style.display = "none";
+                }
+            } else {
+                alert("Failed to fetch student data");
+                resultTable.style.display = "none";
+            }
+        });
+
  
          // DELETE Student
          async function deleteStudent(id) {
@@ -158,14 +229,14 @@
          async function updateStudent(id) {
              const name = prompt("Enter new name:");
              const email = prompt("Enter new email:");
-             const message = prompt("Enter new message:");
+             const password = prompt("Enter new password:");
  
-             if (!name || !email || !message) return alert("All fields are required!");
+             if (!name || !email || !password) return alert("All fields are required!");
  
              const response = await fetch(`${API_BASE}/update?id=${id}`, {
                  method: "PUT",
                  headers: { "Content-Type": "application/json" },
-                 body: JSON.stringify({ name, email, message }),
+                 body: JSON.stringify({ name, email, password }),
              });
  
              if (response.ok) {
