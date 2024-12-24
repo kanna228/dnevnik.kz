@@ -1,47 +1,83 @@
+// db.go
 package main
 
 import (
 	"context"
-	"fmt"
+	"encoding/json"
+	"io/ioutil"
 	"log"
+	"os"
 
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-// Global MongoDB client variable
+// Глобальная переменная для подключения к базе данных
 var client *mongo.Client
 
-// Connect to MongoDB
+// Функция для подключения к MongoDB
 func ConnectToMongoDB() (*mongo.Client, error) {
-	// MongoDB URI - Adjust this based on your setup
-	const uri = "mongodb://localhost:27017"
-
-	// Set client options
-	clientOptions := options.Client().ApplyURI(uri)
-
-	// Connect to MongoDB
-	client, err := mongo.Connect(context.Background(), clientOptions)
-	if err != nil {
-		log.Fatal(err)
-		return nil, err
-	}
-
-	// Ping the database to verify the connection
-	err = client.Ping(context.Background(), nil)
-	if err != nil {
-		log.Fatal(err)
-		return nil, err
-	}
-
-	fmt.Println("Successfully connected to MongoDB!")
-	return client, nil
+	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
+	return mongo.Connect(context.Background(), clientOptions)
 }
 
-// Disconnect from MongoDB
+// Функция для отключения от MongoDB
 func DisconnectMongoDB() {
 	if err := client.Disconnect(context.Background()); err != nil {
-		log.Fatal(err)
+		log.Fatal("Failed to disconnect from MongoDB:", err)
 	}
-	fmt.Println("Disconnected from MongoDB!")
+}
+
+// Функция для чтения данных из файла users.json
+func loadUsersFromJSON(filePath string) ([]User, error) {
+	var users []User
+
+	// Открыть файл
+	file, err := os.Open(filePath)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	// Прочитать содержимое файла
+	data, err := ioutil.ReadAll(file)
+	if err != nil {
+		return nil, err
+	}
+
+	// Декодировать JSON данные в структуру
+	err = json.Unmarshal(data, &users)
+	if err != nil {
+		return nil, err
+	}
+
+	return users, nil
+}
+
+// Функция для добавления пользователей в базу данных, если их нет
+func insertUsersIfNotExist(users []User) {
+	collection := client.Database("your_db_name").Collection("users")
+
+	for _, user := range users {
+		// Проверяем, существует ли уже пользователь с таким email
+		var existingUser User
+		err := collection.FindOne(context.Background(), bson.M{"email": user.Email}).Decode(&existingUser)
+
+		if err != nil { // Если пользователь не найден, добавляем нового
+			if err := insertUser(user); err != nil {
+				log.Println("Failed to insert user:", err)
+			}
+		}
+	}
+}
+
+// Функция для вставки пользователя в базу данных
+func insertUser(user User) error {
+	collection := client.Database("your_db_name").Collection("users")
+	_, err := collection.InsertOne(context.Background(), user)
+	if err != nil {
+		return err
+	}
+	return nil
 }

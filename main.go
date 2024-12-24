@@ -251,6 +251,14 @@ func main() {
 	}
 	defer DisconnectMongoDB()
 
+	// Загрузить пользователей из файла users.json
+	users, err := loadUsersFromJSON("users.json")
+	if err != nil {
+		log.Println("Error loading users from JSON:", err)
+	} else {
+		insertUsersIfNotExist(users) // Вставить пользователей, если их нет в базе данных
+	}
+
 	// Existing Routes
 	http.HandleFunc("/", main_page)
 	http.HandleFunc("/login", login_page)
