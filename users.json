@@ -1,181 +1,181 @@
 [
     {
-        "name": "Teacher1",
-        "email": "teacher1@example.com",
+        "name": "John",
+        "email": "john.teacher@example.edu",
         "password": "password1",
         "role": "teacher"
     },
     {
-        "name": "Teacher2",
-        "email": "teacher2@example.com",
+        "name": "Emma",
+        "email": "emma.teacher@example.edu",
         "password": "password2",
         "role": "teacher"
     },
     {
-        "name": "Teacher3",
-        "email": "teacher3@example.com",
+        "name": "Mark",
+        "email": "mark.teacher@example.edu",
         "password": "password3",
         "role": "teacher"
     },
     {
-        "name": "Teacher4",
-        "email": "teacher4@example.com",
+        "name": "Sophia",
+        "email": "sophia.teacher@example.edu",
         "password": "password4",
         "role": "teacher"
     },
     {
-        "name": "Teacher5",
-        "email": "teacher5@example.com",
+        "name": "Liam",
+        "email": "liam.teacher@example.edu",
         "password": "password5",
         "role": "teacher"
     },
     {
-        "name": "Student1",
-        "email": "student1@example.com",
+        "name": "Ethan",
+        "email": "ethan.student@example.edu",
         "password": "password1",
         "role": "student"
     },
     {
-        "name": "Student2",
-        "email": "student2@example.com",
+        "name": "Olivia",
+        "email": "olivia.student@example.edu",
         "password": "password2",
         "role": "student"
     },
     {
-        "name": "Student3",
-        "email": "student3@example.com",
+        "name": "Mason",
+        "email": "mason.student@example.edu",
         "password": "password3",
         "role": "student"
     },
     {
-        "name": "Student4",
-        "email": "student4@example.com",
+        "name": "Ava",
+        "email": "ava.student@example.edu",
         "password": "password4",
         "role": "student"
     },
     {
-        "name": "Student5",
-        "email": "student5@example.com",
+        "name": "Logan",
+        "email": "logan.student@example.edu",
         "password": "password5",
         "role": "student"
     },
     {
-        "name": "Student6",
-        "email": "student6@example.com",
+        "name": "Isabella",
+        "email": "isabella.student@example.edu",
         "password": "password6",
         "role": "student"
     },
     {
-        "name": "Student7",
-        "email": "student7@example.com",
+        "name": "Lucas",
+        "email": "lucas.student@example.edu",
         "password": "password7",
         "role": "student"
     },
     {
-        "name": "Student8",
-        "email": "student8@example.com",
+        "name": "Sophia",
+        "email": "sophia.student@example.edu",
         "password": "password8",
         "role": "student"
     },
     {
-        "name": "Student9",
-        "email": "student9@example.com",
+        "name": "Noah",
+        "email": "noah.student@example.edu",
         "password": "password9",
         "role": "student"
     },
     {
-        "name": "Student10",
-        "email": "student10@example.com",
+        "name": "Amelia",
+        "email": "amelia.student@example.edu",
         "password": "password10",
         "role": "student"
     },
     {
-        "name": "Student11",
-        "email": "student11@example.com",
+        "name": "James",
+        "email": "james.student@example.edu",
         "password": "password11",
         "role": "student"
     },
     {
-        "name": "Student12",
-        "email": "student12@example.com",
+        "name": "Mia",
+        "email": "mia.student@example.edu",
         "password": "password12",
         "role": "student"
     },
     {
-        "name": "Student13",
-        "email": "student13@example.com",
+        "name": "William",
+        "email": "william.student@example.edu",
         "password": "password13",
         "role": "student"
     },
     {
-        "name": "Student14",
-        "email": "student14@example.com",
+        "name": "Charlotte",
+        "email": "charlotte.student@example.edu",
         "password": "password14",
         "role": "student"
     },
     {
-        "name": "Student15",
-        "email": "student15@example.com",
+        "name": "Alexander",
+        "email": "alexander.student@example.edu",
         "password": "password15",
         "role": "student"
     },
     {
-        "name": "Student16",
-        "email": "student16@example.com",
+        "name": "Harper",
+        "email": "harper.student@example.edu",
         "password": "password16",
         "role": "student"
     },
     {
-        "name": "Student17",
-        "email": "student17@example.com",
+        "name": "Elijah",
+        "email": "elijah.student@example.edu",
         "password": "password17",
         "role": "student"
     },
     {
-        "name": "Student18",
-        "email": "student18@example.com",
+        "name": "Ella",
+        "email": "ella.student@example.edu",
         "password": "password18",
         "role": "student"
     },
     {
-        "name": "Student19",
-        "email": "student19@example.com",
+        "name": "Daniel",
+        "email": "daniel.student@example.edu",
         "password": "password19",
         "role": "student"
     },
     {
-        "name": "Student20",
-        "email": "student20@example.com",
+        "name": "Lily",
+        "email": "lily.student@example.edu",
         "password": "password20",
         "role": "student"
     },
     {
-        "name": "Student21",
-        "email": "student21@example.com",
+        "name": "Matthew",
+        "email": "matthew.student@example.edu",
         "password": "password21",
         "role": "student"
     },
     {
-        "name": "Student22",
-        "email": "student22@example.com",
+        "name": "Emily",
+        "email": "emily.student@example.edu",
         "password": "password22",
         "role": "student"
     },
     {
-        "name": "Student23",
-        "email": "student23@example.com",
+        "name": "Henry",
+        "email": "henry.student@example.edu",
         "password": "password23",
         "role": "student"
     },
     {
-        "name": "Student24",
-        "email": "student24@example.com",
+        "name": "Grace",
+        "email": "grace.student@example.edu",
         "password": "password24",
         "role": "student"
     },
     {
-        "name": "Student25",
-        "email": "student25@example.com",
+        "name": "Benjamin",
+        "email": "benjamin.student@example.edu",
         "password": "password25",
         "role": "student"
     }
