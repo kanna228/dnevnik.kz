@@ -6,7 +6,10 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"regexp"
+
+	"github.com/sirupsen/logrus"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -27,26 +30,51 @@ type ResponseData struct {
 	Message string `json:"message"`
 }
 
+// Настройка логгера
+func setupLogger() *logrus.Logger {
+	log := logrus.New()
+
+	// Устанавливаем формат JSON для логов
+	log.SetFormatter(&logrus.JSONFormatter{})
+
+	// Создаем файл для логов
+	file, err := os.OpenFile("logs.json", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	if err != nil {
+		log.Fatal("Failed to open log file:", err)
+	}
+
+	// Устанавливаем вывод логов в файл
+	log.SetOutput(file)
+
+	return log
+}
+
+// Обработчик главной страницы
 func main_page(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "main_page.html")
 }
 
+// Обработчик страницы логина
 func login_page(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "login.html")
 }
 
+// Обработчик страницы логина для учителей
 func teacher_login_page(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "teacher_login.html")
 }
 
+// Обработчик страницы регистрации
 func register_page(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "register.html")
 }
 
+// Обработчик страницы контактов
 func handler(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "contact.html")
 }
 
+// Обработчик страницы списка
 func list(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "list.html")
 }
@@ -92,8 +120,9 @@ func postHandler(w http.ResponseWriter, r *http.Request) {
 
 // CRUD Functions (Create, Read, Update, Delete)
 
-// Create a user
+// Пример создания пользователя с логированием
 func createUser(w http.ResponseWriter, r *http.Request) {
+	log := setupLogger()
 
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -107,7 +136,6 @@ func createUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// You could add validation for role, if needed
 	if user.Role != "teacher" && user.Role != "student" {
 		http.Error(w, "Invalid role, must be 'teacher' or 'student'", http.StatusBadRequest)
 		return
@@ -121,48 +149,22 @@ func createUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user.ID = result.InsertedID.(primitive.ObjectID)
+
+	// Логирование
+	log.WithFields(logrus.Fields{
+		"action": "create_user",
+		"method": r.Method,
+		"user":   user.Name,
+	}).Info("User created successfully")
+
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(user)
 }
 
-// GET handler to retrieve a user by ID
-func getUserByID(w http.ResponseWriter, r *http.Request) {
-	// Ensure it's a GET request
-	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
-	// Extract ID from the query parameter
-	idParam := r.URL.Query().Get("id")
-	if idParam == "" {
-		http.Error(w, "ID parameter is required", http.StatusBadRequest)
-		return
-	}
-
-	// Convert ID to MongoDB ObjectID
-	objID, err := primitive.ObjectIDFromHex(idParam)
-	if err != nil {
-		http.Error(w, "Invalid ID format", http.StatusBadRequest)
-		return
-	}
-
-	// Find the user in MongoDB
-	collection := client.Database("your_db_name").Collection("users")
-	var user User
-	err = collection.FindOne(context.Background(), bson.M{"_id": objID}).Decode(&user)
-	if err != nil {
-		http.Error(w, "User not found", http.StatusNotFound)
-		return
-	}
-
-	// Return the user as JSON
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(user)
-}
-
-// Get all users
+// Пример получения всех пользователей с логированием
 func getAllUsers(w http.ResponseWriter, r *http.Request) {
+	log := setupLogger()
+
 	collection := client.Database("your_db_name").Collection("users")
 	cursor, err := collection.Find(context.Background(), bson.M{})
 	if err != nil {
@@ -180,12 +182,21 @@ func getAllUsers(w http.ResponseWriter, r *http.Request) {
 		users = append(users, user)
 	}
 
+	// Логирование
+	log.WithFields(logrus.Fields{
+		"action": "get_all_users",
+		"method": r.Method,
+		"count":  len(users),
+	}).Info("Fetched all users")
+
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(users)
 }
 
-// Update a user
+// Пример обновления пользователя с логированием
 func updateUser(w http.ResponseWriter, r *http.Request) {
+	log := setupLogger()
+
 	if r.Method != http.MethodPut {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -217,11 +228,20 @@ func updateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Логирование
+	log.WithFields(logrus.Fields{
+		"action":  "update_user",
+		"method":  r.Method,
+		"user_id": objID,
+	}).Info("User updated successfully")
+
 	json.NewEncoder(w).Encode(ResponseData{Status: "success", Message: "User updated"})
 }
 
-// Delete a user
+// Пример удаления пользователя с логированием
 func deleteUser(w http.ResponseWriter, r *http.Request) {
+	log := setupLogger()
+
 	idParam := r.URL.Query().Get("id")
 	objID, err := primitive.ObjectIDFromHex(idParam)
 	if err != nil {
@@ -236,7 +256,54 @@ func deleteUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Логирование
+	log.WithFields(logrus.Fields{
+		"action":  "delete_user",
+		"method":  r.Method,
+		"user_id": objID,
+	}).Info("User deleted successfully")
+
 	json.NewEncoder(w).Encode(ResponseData{Status: "success", Message: "User deleted"})
+}
+
+// Пример получения пользователя по ID с логированием
+func getUserByID(w http.ResponseWriter, r *http.Request) {
+	log := setupLogger()
+
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	idParam := r.URL.Query().Get("id")
+	if idParam == "" {
+		http.Error(w, "ID parameter is required", http.StatusBadRequest)
+		return
+	}
+
+	objID, err := primitive.ObjectIDFromHex(idParam)
+	if err != nil {
+		http.Error(w, "Invalid ID format", http.StatusBadRequest)
+		return
+	}
+
+	collection := client.Database("your_db_name").Collection("users")
+	var user User
+	err = collection.FindOne(context.Background(), bson.M{"_id": objID}).Decode(&user)
+	if err != nil {
+		http.Error(w, "User not found", http.StatusNotFound)
+		return
+	}
+
+	// Логирование
+	log.WithFields(logrus.Fields{
+		"action":  "get_user_by_id",
+		"method":  r.Method,
+		"user_id": objID,
+	}).Info("Fetched user by ID")
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(user)
 }
 
 func main() {
@@ -274,6 +341,13 @@ func main() {
 	http.HandleFunc("/api/users/update", updateUser)
 	http.HandleFunc("/api/users/delete", deleteUser)
 	http.HandleFunc("/api/users/get", getUserByID)
+
+	log := setupLogger()
+
+	log.WithFields(logrus.Fields{
+		"action": "start",
+		"status": "success",
+	}).Info("Application started successfully")
 
 	// Start Server
 	fmt.Println("Server running at http://localhost:8080")
