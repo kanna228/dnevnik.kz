@@ -304,6 +304,17 @@ func getUserByID(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(user)
+
+}
+
+func testEmailHandler(w http.ResponseWriter, r *http.Request) {
+	err := sendEmail("amigo553@mail.ru", "Test Subject", "This is a test email.")
+	if err != nil {
+		log.Println("Failed to send test email:", err)
+		http.Error(w, "Failed to send test email", http.StatusInternalServerError)
+		return
+	}
+	w.Write([]byte("Test email sent successfully!"))
 }
 
 func main() {
@@ -349,6 +360,10 @@ func main() {
 		"status": "success",
 	}).Info("Application started successfully")
 
+	http.HandleFunc("/api/contact", handleSupportRequest)
+	// New route for handling support requests
+	http.HandleFunc("/support", handleSupportRequest)
+	http.HandleFunc("/test-email", testEmailHandler)
 	// Start Server
 	fmt.Println("Server running at http://localhost:8080")
 	if err := http.ListenAndServe(":8080", nil); err != nil {

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Форма отправки сообщения</title>
+    <title>Профиль</title>
     <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
@@ -15,31 +15,36 @@
                 <li><a href="/teachers">Учителя</a></li>
                 <li><a href="/login">Войти</a></li>
                 <li><a href="/about">О нас</a></li>
-                <li><a href="/contact">Связаться с нами</a></li>
+                <li><a href="/profile">Профиль</a></li>
             </ul>
         </nav>
     </header>
-    <h1>Связаться с нами</h1>
-    <form id="messageForm" action="/api" method="POST">
+    <h1>Профиль пользователя</h1>
+    <p>Используйте форму ниже, чтобы связаться с нашей службой поддержки.</p>
+    <form id="messageForm" action="/api/contact" method="POST">
+        <label for="subject">Тема сообщения:</label><br>
+        <input type="text" id="subject" name="subject"><br><br>
         <label for="message">Сообщение:</label><br>
-        <input type="text" id="message" name="message"><br><br>
-        <label for="email">Почта:</label><br>
+        <textarea id="message" name="message" rows="5"></textarea><br><br>
+        <label for="email">Ваш Email:</label><br>
         <input type="email" id="email" name="email"><br><br>
-        <button type="submit">Отправить</button>
+        <button type="submit">Отправить сообщение</button>
     </form>
+    
 
     <h2>Ответ от сервера:</h2>
     <div id="response"></div>
 
     <script>
-        // Обработчик отправки формы
+        // Add an event listener to handle form submission
         document.getElementById("messageForm").addEventListener("submit", function(event) {
-            event.preventDefault(); // Остановить стандартную отправку формы
+            event.preventDefault(); // Prevent the form from submitting the normal way
 
+            // Get the values from the form inputs
             const message = document.getElementById("message").value;
             const email = document.getElementById("email").value;
+            const subject = document.getElementById("subject").value; 
 
-            // Проверка корректности email
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!emailRegex.test(email)) {
                 document.getElementById("response").innerHTML = `<strong>Ошибка:</strong> Неверный формат email`;
@@ -47,16 +52,24 @@
             }
 
             // Отправляем данные методом POST
-            fetch('/api', {
+            fetch('/api/contact', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ message: message, email: email }),
+                body: JSON.stringify({
+                    message: message,
+                    user_email: email,
+                    subject: subject,  // Отправляем тему
+                }),
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Что-то пошло не так');
+                }
+                return response.json();
+            })
             .then(data => {
-                // Показать ответ на странице
                 document.getElementById("response").innerHTML = `
                     <strong>Status:</strong> ${data.status} <br>
                     <strong>Message:</strong> ${data.message}
