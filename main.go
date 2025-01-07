@@ -307,16 +307,6 @@ func getUserByID(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func testEmailHandler(w http.ResponseWriter, r *http.Request) {
-	err := sendEmail("amigo553@mail.ru", "Test Subject", "This is a test email.")
-	if err != nil {
-		log.Println("Failed to send test email:", err)
-		http.Error(w, "Failed to send test email", http.StatusInternalServerError)
-		return
-	}
-	w.Write([]byte("Test email sent successfully!"))
-}
-
 func main() {
 	fs := http.FileServer(http.Dir("./static")) // Указываем папку "static"
 	http.Handle("/static/", http.StripPrefix("/static/", fs))
@@ -363,7 +353,6 @@ func main() {
 	http.HandleFunc("/api/contact", handleSupportRequest)
 	// New route for handling support requests
 	http.HandleFunc("/support", handleSupportRequest)
-	http.HandleFunc("/test-email", testEmailHandler)
 	// Start Server
 	fmt.Println("Server running at http://localhost:8080")
 	if err := http.ListenAndServe(":8080", nil); err != nil {

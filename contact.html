@@ -15,19 +15,19 @@
                 <li><a href="/teachers">Учителя</a></li>
                 <li><a href="/login">Войти</a></li>
                 <li><a href="/about">О нас</a></li>
-                <li><a href="/profile">Профиль</a></li>
+                <li><a href="/profile">Админ</a></li>
             </ul>
         </nav>
     </header>
-    <h1>Профиль пользователя</h1>
-    <p>Используйте форму ниже, чтобы связаться с нашей службой поддержки.</p>
-    <form id="messageForm" action="/api/contact" method="POST">
-        <label for="subject">Тема сообщения:</label><br>
-        <input type="text" id="subject" name="subject"><br><br>
+    <h1>Страница админа</h1>
+    <p>Используйте форму чтобы рассылать сообщение.</p>
+    <form id="messageForm" action="/api/contact" method="POST" enctype="multipart/form-data">
         <label for="message">Сообщение:</label><br>
         <textarea id="message" name="message" rows="5"></textarea><br><br>
         <label for="email">Ваш Email:</label><br>
         <input type="email" id="email" name="email"><br><br>
+        <label for="file">Прикрепить файл:</label><br>
+        <input type="file" id="file" name="file"><br><br>
         <button type="submit">Отправить сообщение</button>
     </form>
     
@@ -36,51 +36,36 @@
     <div id="response"></div>
 
     <script>
-        // Add an event listener to handle form submission
         document.getElementById("messageForm").addEventListener("submit", function(event) {
-            event.preventDefault(); // Prevent the form from submitting the normal way
+        event.preventDefault(); // Остановить стандартную отправку формы
 
-            // Get the values from the form inputs
-            const message = document.getElementById("message").value;
-            const email = document.getElementById("email").value;
-            const subject = document.getElementById("subject").value; 
+        const formData = new FormData(document.getElementById("messageForm"));
 
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(email)) {
-                document.getElementById("response").innerHTML = `<strong>Ошибка:</strong> Неверный формат email`;
-                return;
+        // Отправляем данные методом POST
+        fetch('/api/contact', {
+            method: 'POST',
+            body: formData,
+        })
+        .then(response => {
+            if (!response.ok) {
+                // Если ответ не OK, возвращаем текст
+                return response.text().then(text => { throw new Error(text); });
             }
-
-            // Отправляем данные методом POST
-            fetch('/api/contact', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    message: message,
-                    user_email: email,
-                    subject: subject,  // Отправляем тему
-                }),
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Что-то пошло не так');
-                }
-                return response.json();
-            })
-            .then(data => {
-                document.getElementById("response").innerHTML = `
-                    <strong>Status:</strong> ${data.status} <br>
-                    <strong>Message:</strong> ${data.message}
-                `;
-            })
-            .catch(error => {
-                document.getElementById("response").innerHTML = `
-                    <strong>Ошибка:</strong> ${error.message}
-                `;
-            });
+            return response.json();
+        })
+        .then(data => {
+            document.getElementById("response").innerHTML = `
+                <strong>Status:</strong> ${data.status} <br>
+                <strong>Message:</strong> ${data.message}
+            `;
+        })
+        .catch(error => {
+            document.getElementById("response").innerHTML = `
+                <strong>Ошибка:</strong> ${error.message}
+            `;
         });
+    });
+
     </script>
 </body>
 </html>
