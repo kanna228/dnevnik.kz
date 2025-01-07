@@ -27,7 +27,7 @@ func sendEmail(to string, subject string, body string) error {
 	m.SetBody("text/plain", body)
 
 	// Replace SMTP settings with your provider's information
-	d := gomail.NewDialer("smtp.mail.ru", 587, "dildahanz@mail.ru", "NmwPuFt4svU9eiDa0Bu0") // Update these details
+	d := gomail.NewDialer("smtp.mail.ru", 587, "dildahanz@mail.ru", "") // Update these details
 	return d.DialAndSend(m)
 }
 
