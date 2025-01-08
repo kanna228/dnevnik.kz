@@ -183,6 +183,11 @@ func getAllUsers(w http.ResponseWriter, r *http.Request) {
 		}
 		users = append(users, user)
 	}
+	// Проверяем, если пользователей нет
+	if len(users) == 0 {
+		http.Error(w, "No users found in the database", http.StatusNotFound)
+		return
+	}
 
 	// Логирование
 	log.WithFields(logrus.Fields{
