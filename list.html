@@ -97,6 +97,20 @@
 
  
      <h2>Students List</h2>
+
+      <div class="filter-container">
+        <select id="roleFilter">
+            <option value="">Все роли</option>
+            <option value="student">Студенты</option>
+            <option value="teacher">Учителя</option>
+        </select>
+        <select id="sortFilter">
+            <option value="">Сортировка по имени</option>
+            <option value="asc">A-Z</option>
+            <option value="desc">Z-A</option>
+        </select>
+        <button id="applyFilters">Применить фильтры</button>
+    </div>
      <table id="studentsTable">
          <thead>
              <tr>
@@ -246,6 +260,42 @@
                  alert("Failed to update student");
              }
          }
+
+         // Функция для загрузки студентов с фильтрацией
+         async function loadStudents() {
+            const role = document.getElementById("roleFilter").value;
+            const order = document.getElementById("sortFilter").value;
+
+            let url = `${API_BASE}/sorted`;
+         if (role || order) {
+               url += `?${role ? `role=${role}&` : ""}${order ? `order=${order}` : ""}`;
+         }
+
+         const response = await fetch(url);
+            const students = await response.json();
+            const tableBody = document.querySelector("#studentsTable tbody");
+            tableBody.innerHTML = "";
+
+            students.forEach(student => {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${student.id}</td>
+                    <td>${student.name}</td>
+                    <td>${student.email}</td>
+                    <td>${student.password}</td>
+                    <td>${student.role}</td>
+                    <td>
+                        <button onclick="deleteStudent('${student.id}')">Удалить</button>
+                        <button onclick="updateStudent('${student.id}')">Обновить</button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+
+        // Обработчик кнопки применения фильтров
+        document.getElementById("applyFilters").addEventListener("click", loadStudents);
  
          // Initial Load
          loadStudents();

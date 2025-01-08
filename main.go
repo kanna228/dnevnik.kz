@@ -11,6 +11,8 @@ import (
 
 	"github.com/sirupsen/logrus"
 
+	"go.mongodb.org/mongo-driver/mongo/options"
+
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -307,6 +309,56 @@ func getUserByID(w http.ResponseWriter, r *http.Request) {
 
 }
 
+func testEmailHandler(w http.ResponseWriter, r *http.Request) {
+	err := sendEmail("amigo553@mail.ru", "Test Subject", "This is a test email.")
+	if err != nil {
+		log.Println("Failed to send test email:", err)
+		http.Error(w, "Failed to send test email", http.StatusInternalServerError)
+		return
+	}
+	w.Write([]byte("Test email sent successfully!"))
+}
+
+func GetUsersSorted(w http.ResponseWriter, r *http.Request) {
+	role := r.URL.Query().Get("role")       // Получаем фильтр роли
+	sortOrder := r.URL.Query().Get("order") // Получаем сортировку (asc или desc)
+
+	sort := 1 // По умолчанию сортировка A-Z
+	if sortOrder == "desc" {
+		sort = -1 // Z-A
+	}
+
+	// Фильтр для MongoDB
+	filter := bson.M{}
+	if role != "" {
+		filter["role"] = role
+	}
+
+	collection := client.Database("your_db_name").Collection("users")
+	cursor, err := collection.Find(
+		context.Background(),
+		filter,
+		options.Find().SetSort(bson.D{{Key: "name", Value: sort}}),
+	)
+	if err != nil {
+		http.Error(w, "Failed to retrieve users", http.StatusInternalServerError)
+		return
+	}
+	defer cursor.Close(context.Background())
+
+	var users []User
+	for cursor.Next(context.Background()) {
+		var user User
+		if err := cursor.Decode(&user); err != nil {
+			continue
+		}
+		users = append(users, user)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(users)
+}
+
 func main() {
 	fs := http.FileServer(http.Dir("./static")) // Указываем папку "static"
 	http.Handle("/static/", http.StripPrefix("/static/", fs))
@@ -326,6 +378,8 @@ func main() {
 	} else {
 		insertUsersIfNotExist(users) // Вставить пользователей, если их нет в базе данных
 	}
+
+	http.HandleFunc("/api/users/sorted", GetUsersSorted)
 
 	// Existing Routes
 	http.HandleFunc("/", main_page)
@@ -353,6 +407,7 @@ func main() {
 	http.HandleFunc("/api/contact", handleSupportRequest)
 	// New route for handling support requests
 	http.HandleFunc("/support", handleSupportRequest)
+	http.HandleFunc("/test-email", testEmailHandler)
 	// Start Server
 	fmt.Println("Server running at http://localhost:8080")
 	if err := http.ListenAndServe(":8080", nil); err != nil {
