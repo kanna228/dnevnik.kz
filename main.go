@@ -53,32 +53,32 @@ func setupLogger() *logrus.Logger {
 
 // Обработчик главной страницы
 func main_page(w http.ResponseWriter, r *http.Request) {
-	http.ServeFile(w, r, "main_page.html")
+	http.ServeFile(w, r, "views/main_page.html")
 }
 
 // Обработчик страницы логина
 func login_page(w http.ResponseWriter, r *http.Request) {
-	http.ServeFile(w, r, "login.html")
+	http.ServeFile(w, r, "views/login.html")
 }
 
 // Обработчик страницы логина для учителей
 func teacher_login_page(w http.ResponseWriter, r *http.Request) {
-	http.ServeFile(w, r, "teacher_login.html")
+	http.ServeFile(w, r, "views/teacher_login.html")
 }
 
 // Обработчик страницы регистрации
 func register_page(w http.ResponseWriter, r *http.Request) {
-	http.ServeFile(w, r, "register.html")
+	http.ServeFile(w, r, "views/register.html")
 }
 
 // Обработчик страницы контактов
 func handler(w http.ResponseWriter, r *http.Request) {
-	http.ServeFile(w, r, "contact.html")
+	http.ServeFile(w, r, "views/contact.html")
 }
 
 // Обработчик страницы списка
 func list(w http.ResponseWriter, r *http.Request) {
-	http.ServeFile(w, r, "list.html")
+	http.ServeFile(w, r, "views/list.html")
 }
 
 // Original POST Handler
