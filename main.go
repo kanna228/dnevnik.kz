@@ -382,9 +382,21 @@ func updateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var updateData User
+	var updateData struct {
+		Name     string `json:"name"`
+		Email    string `json:"email"`
+		Password string `json:"password"`
+		Role     string `json:"role"` // Добавляем поле role
+	}
+
 	if err := json.NewDecoder(r.Body).Decode(&updateData); err != nil {
 		http.Error(w, "Invalid JSON", http.StatusBadRequest)
+		return
+	}
+
+	// Проверяем, что роль либо "student", либо "teacher"
+	if updateData.Role != "student" && updateData.Role != "teacher" {
+		http.Error(w, "Invalid role, must be 'student' or 'teacher'", http.StatusBadRequest)
 		return
 	}
 
@@ -392,6 +404,7 @@ func updateUser(w http.ResponseWriter, r *http.Request) {
 		"name":     updateData.Name,
 		"email":    updateData.Email,
 		"password": updateData.Password,
+		"role":     updateData.Role, // Обновляем роль
 	}}
 
 	collection := client.Database("your_db_name").Collection("users")

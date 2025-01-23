@@ -267,25 +267,28 @@
  
          // UPDATE Student
          async function updateStudent(id) {
-             const name = prompt("Enter new name:");
-             const email = prompt("Enter new email:");
-             const password = prompt("Enter new password:");
- 
-             if (!name || !email || !password) return alert("All fields are required!");
- 
-             const response = await fetch(`${API_BASE}/update?id=${id}`, {
-                 method: "PUT",
-                 headers: { "Content-Type": "application/json" },
-                 body: JSON.stringify({ name, email, password }),
-             });
- 
-             if (response.ok) {
-                 alert("Student updated successfully!");
-                 loadStudents();
-             } else {
-                 alert("Failed to update student");
-             }
-         }
+            const name = prompt("Enter new name:");
+            const email = prompt("Enter new email:");
+            const password = prompt("Enter new password:");
+            const role = confirm("Is this user a teacher? (OK for teacher, Cancel for student)") 
+                ? "teacher" 
+                : "student";
+
+            if (!name || !email || !password) return alert("All fields are required!");
+
+            const response = await fetch(`${API_BASE}/update?id=${id}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name, email, password, role }), // Добавляем роль
+            });
+
+            if (response.ok) {
+                alert("Student updated successfully!");
+                loadStudents();
+            } else {
+                alert("Failed to update student");
+            }
+        }
 
          // Функция для загрузки студентов с фильтрацией
          async function loadStudents() {
