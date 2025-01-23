@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Профиль</title>
+    <title>Страница админа</title>
     <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
@@ -19,53 +19,118 @@
             </ul>
         </nav>
     </header>
-    <h1>Страница админа</h1>
-    <p>Используйте форму чтобы рассылать сообщение.</p>
-    <form id="messageForm" action="/api/contact" method="POST" enctype="multipart/form-data">
-        <label for="message">Сообщение:</label><br>
-        <textarea id="message" name="message" rows="5"></textarea><br><br>
-        <label for="email">Ваш Email:</label><br>
-        <input type="email" id="email" name="email"><br><br>
-        <label for="file">Прикрепить файл:</label><br>
-        <input type="file" id="file" name="file"><br><br>
-        <button type="submit">Отправить сообщение</button>
-    </form>
-    
 
-    <h2>Ответ от сервера:</h2>
-    <div id="response"></div>
+    <!-- Контейнер для основного контента -->
+    <div id="content">
+        <h1>Страница админа</h1>
+        <p>Используйте форму чтобы рассылать сообщение.</p>
+        <form id="messageForm" action="/api/contact" method="POST" enctype="multipart/form-data">
+            <label for="message">Сообщение:</label><br>
+            <textarea id="message" name="message" rows="5"></textarea><br><br>
+            <label for="email">Ваш Email:</label><br>
+            <input type="email" id="email" name="email"><br><br>
+            <label for="file">Прикрепить файл:</label><br>
+            <input type="file" id="file" name="file"><br><br>
+            <button type="submit">Отправить сообщение</button>
+        </form>
+
+        <h2>Ответ от сервера:</h2>
+        <div id="response"></div>
+    </div>
+
+    <!-- Контейнер для сообщения "Доступ закрыт" -->
+    <div id="accessDenied" style="display: none;">
+        <h1>Доступ закрыт</h1>
+        <p>У вас нет прав для доступа к этой странице.</p>
+    </div>
 
     <script>
-        document.getElementById("messageForm").addEventListener("submit", function(event) {
-        event.preventDefault(); // Остановить стандартную отправку формы
+        const API_BASE = "http://localhost:8080/api";
 
-        const formData = new FormData(document.getElementById("messageForm"));
+        // Функция для получения информации о пользователе
+        async function fetchUserInfo() {
+            const token = localStorage.getItem("jwt");
 
-        // Отправляем данные методом POST
-        fetch('/api/contact', {
-            method: 'POST',
-            body: formData,
-        })
-        .then(response => {
-            if (!response.ok) {
-                // Если ответ не OK, возвращаем текст
-                return response.text().then(text => { throw new Error(text); });
+            if (!token) {
+                // Если токена нет, перенаправляем на страницу входа
+                window.location.href = "/login";
+                return;
             }
-            return response.json();
-        })
-        .then(data => {
-            document.getElementById("response").innerHTML = `
-                <strong>Status:</strong> ${data.status} <br>
-                <strong>Message:</strong> ${data.message}
-            `;
-        })
-        .catch(error => {
-            document.getElementById("response").innerHTML = `
-                <strong>Ошибка:</strong> ${error.message}
-            `;
-        });
-    });
 
+            const response = await fetch(`${API_BASE}/user`, {
+                method: "GET",
+                headers: {
+                    "Authorization": token, // Передаём токен в заголовке
+                },
+            });
+
+            if (response.ok) {
+                const userInfo = await response.json();
+                checkUserRole(userInfo); // Проверяем роль пользователя
+            } else {
+                alert("Ошибка при получении информации о пользователе");
+                logout(); // Выход из системы
+            }
+        }
+
+        // Функция для проверки роли пользователя
+        function checkUserRole(userInfo) {
+            const contentDiv = document.getElementById("content");
+            const accessDeniedDiv = document.getElementById("accessDenied");
+
+            if (userInfo.role === "teacher") {
+                // Если роль "учитель", показываем контент
+                contentDiv.style.display = "block";
+                accessDeniedDiv.style.display = "none";
+            } else {
+                // Если роль не "учитель", показываем сообщение "Доступ закрыт"
+                contentDiv.style.display = "none";
+                accessDeniedDiv.style.display = "block";
+            }
+        }
+
+        // Функция для выхода из аккаунта
+        function logout() {
+            // Удаляем токен из localStorage
+            localStorage.removeItem("jwt");
+
+            // Перенаправляем на страницу входа
+            window.location.href = "/login";
+        }
+
+        // Вызываем функцию при загрузке страницы
+        fetchUserInfo();
+
+        // Обработчик формы
+        document.getElementById("messageForm").addEventListener("submit", function(event) {
+            event.preventDefault(); // Остановить стандартную отправку формы
+
+            const formData = new FormData(document.getElementById("messageForm"));
+
+            // Отправляем данные методом POST
+            fetch('/api/contact', {
+                method: 'POST',
+                body: formData,
+            })
+            .then(response => {
+                if (!response.ok) {
+                    // Если ответ не OK, возвращаем текст
+                    return response.text().then(text => { throw new Error(text); });
+                }
+                return response.json();
+            })
+            .then(data => {
+                document.getElementById("response").innerHTML = `
+                    <strong>Status:</strong> ${data.status} <br>
+                    <strong>Message:</strong> ${data.message}
+                `;
+            })
+            .catch(error => {
+                document.getElementById("response").innerHTML = `
+                    <strong>Ошибка:</strong> ${error.message}
+                `;
+            });
+        });
     </script>
 </body>
 </html>
