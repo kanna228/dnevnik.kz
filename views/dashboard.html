@@ -32,8 +32,9 @@
 
     <!-- Скрипт для работы с данными пользователя и выходом -->
     <script>
-        // Функция для отображения информации о пользователе
-        function displayUserInfo() {
+        const API_BASE = "http://localhost:8080/api";
+
+        async function fetchUserInfo() {
             const token = localStorage.getItem("jwt");
 
             if (!token) {
@@ -42,25 +43,29 @@
                 return;
             }
 
-            // Декодируем payload из JWT
-            try {
-                const payloadBase64 = token.split(".")[1]; // Берём вторую часть токена (payload)
-                const payloadJson = atob(payloadBase64); // Декодируем из base64
-                const payload = JSON.parse(payloadJson); // Парсим JSON
+            const response = await fetch(`${API_BASE}/user`, {
+                method: "GET",
+                headers: {
+                    "Authorization": token, // Передаём токен в заголовке
+                },
+            });
 
-                // Отображаем информацию о пользователе
-                const userInfo = document.getElementById("userInfo");
-                userInfo.innerHTML = `
-                    <p><strong>Имя:</strong> ${payload.Username}</p>
-                    <p><strong>Email:</strong> ${payload.Email}</p>
-                    <p><strong>Роль:</strong> ${payload.Role}</p>
-                    <p><strong>Токен:</strong> <code>${token}</code></p>
-                `;
-            } catch (error) {
-                console.error("Failed to decode token:", error);
-                alert("Ошибка при декодировании токена. Пожалуйста, войдите снова.");
+            if (response.ok) {
+                const userInfo = await response.json();
+                displayUserInfo(userInfo); // Отображаем информацию о пользователе
+            } else {
+                alert("Ошибка при получении информации о пользователе");
                 logout(); // Выход из системы
             }
+        }
+
+        function displayUserInfo(userInfo) {
+            const userInfoDiv = document.getElementById("userInfo");
+            userInfoDiv.innerHTML = `
+                <p><strong>Имя:</strong> ${userInfo.username}</p>
+                <p><strong>Email:</strong> ${userInfo.email}</p>
+                <p><strong>Роль:</strong> ${userInfo.role}</p>
+            `;
         }
 
         // Функция для выхода из аккаунта
@@ -72,8 +77,8 @@
             window.location.href = "/login";
         }
 
-        // Отображаем информацию о пользователе при загрузке страницы
-        displayUserInfo();
+        // Вызываем функцию при загрузке страницы
+        fetchUserInfo();
 
         // Вешаем обработчик на кнопку выхода
         document.getElementById("logoutButton").addEventListener("click", logout);

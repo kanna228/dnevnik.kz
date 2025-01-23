@@ -543,6 +543,34 @@ func GetUsersSorted(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(users)
 }
 
+func getUserInfoHandler(w http.ResponseWriter, r *http.Request) {
+
+	// Проверяем токен
+	tokenString := r.Header.Get("Authorization")
+	if tokenString == "" {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	claims := &Claims{}
+	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+		return jwtKey, nil
+	})
+
+	if err != nil || !token.Valid {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	// Возвращаем информацию о пользователе
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{
+		"username": claims.Username,
+		"email":    claims.Email,
+		"role":     claims.Role,
+	})
+}
+
 func main() {
 	fs := http.FileServer(http.Dir("./static")) // Указываем папку "static"
 	http.Handle("/static/", http.StripPrefix("/static/", fs))
@@ -586,6 +614,7 @@ func main() {
 
 	http.HandleFunc("/api/login", loginHandler)
 	http.HandleFunc("/api/protected", protectedHandler)
+	http.HandleFunc("/api/user", getUserInfoHandler)
 
 	log := setupLogger()
 
