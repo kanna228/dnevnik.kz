@@ -10,10 +10,13 @@ import (
 	"net/http"
 	"os"
 	"regexp"
+	"time"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/gomail.v2"
 
+	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -33,6 +36,103 @@ type User struct {
 type ResponseData struct {
 	Status  string `json:"status"`
 	Message string `json:"message"`
+}
+
+var jwtKey = []byte("mY5uP8x/A1bC2dE3fG4hI5jK6lM7nO8pQ9rS0tU1vW2X3yZ4")
+
+type Claims struct {
+	Username string `json:"username"`
+	Email    string `json:"email"`
+	Role     string `json:"role"`
+	jwt.RegisteredClaims
+}
+
+func findUserByEmail(email string) (*User, error) {
+	collection := client.Database("your_db_name").Collection("users")
+	var user User
+	filter := bson.M{"email": email}
+	err := collection.FindOne(context.Background(), filter).Decode(&user)
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+func loginHandler(w http.ResponseWriter, r *http.Request) {
+	var inputUser User
+	if err := json.NewDecoder(r.Body).Decode(&inputUser); err != nil {
+		log.Println("Invalid input:", err)
+		http.Error(w, "Invalid input", http.StatusBadRequest)
+		return
+	}
+
+	log.Printf("Login attempt for email: %s", inputUser.Email)
+
+	// Ищем пользователя в базе данных по email
+	dbUser, err := findUserByEmail(inputUser.Email)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			log.Printf("User not found: %s", inputUser.Email)
+			http.Error(w, "User not found", http.StatusUnauthorized)
+		} else {
+			log.Printf("Database error: %v", err)
+			http.Error(w, "Database error", http.StatusInternalServerError)
+		}
+		return
+	}
+
+	log.Printf("User found: %+v", dbUser)
+
+	// Проверяем пароль (без хеширования)
+	if inputUser.Password != dbUser.Password {
+		log.Println("Invalid password for user:", dbUser.Name)
+		http.Error(w, "Invalid password", http.StatusUnauthorized)
+		return
+	}
+
+	log.Println("User authenticated:", dbUser.Name)
+
+	// Создание JWT
+	expirationTime := time.Now().Add(24 * time.Hour)
+	claims := &Claims{
+		Username: dbUser.Name,
+		Email:    dbUser.Email,
+		Role:     dbUser.Role,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(expirationTime),
+		},
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	tokenString, err := token.SignedString(jwtKey)
+	if err != nil {
+		log.Println("Failed to generate token:", err)
+		http.Error(w, "Failed to generate token", http.StatusInternalServerError)
+		return
+	}
+
+	// Отправка токена клиенту
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"token": tokenString})
+}
+
+func protectedHandler(w http.ResponseWriter, r *http.Request) {
+	tokenString := r.Header.Get("Authorization")
+	if tokenString == "" {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	claims := &Claims{}
+	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+		return jwtKey, nil
+	})
+
+	if err != nil || !token.Valid {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	w.Write([]byte(fmt.Sprintf("Welcome, %s!", claims.Username)))
 }
 
 // Настройка логгера
@@ -82,6 +182,9 @@ func handler(w http.ResponseWriter, r *http.Request) {
 // Обработчик страницы списка
 func list(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "views/list.html")
+}
+func dashboard(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, "views/dashboard.html")
 }
 
 // Original POST Handler
@@ -457,6 +560,7 @@ func main() {
 	http.HandleFunc("/contact", handler)
 	http.HandleFunc("/api", postHandler)
 	http.HandleFunc("/list", list)
+	http.HandleFunc("/dashboard", dashboard)
 
 	// CRUD Routes
 	http.HandleFunc("/api/users/create", createUser)
@@ -466,6 +570,9 @@ func main() {
 	http.HandleFunc("/api/users/get", getUserByID)
 
 	http.HandleFunc("/confirm", confirmUser)
+
+	http.HandleFunc("/api/login", loginHandler)
+	http.HandleFunc("/api/protected", protectedHandler)
 
 	log := setupLogger()
 

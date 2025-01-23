@@ -24,9 +24,9 @@
     <!-- Основной контент -->
     <main>
         <h1>Вход Ученик</h1>
-        <form>
-            <label for="username">Имя пользователя:</label>
-            <input type="text" id="username" name="username" required>
+        <form id="loginForm">
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" required>
 
             <label for="password">Пароль:</label>
             <input type="password" id="password" name="password" required>
@@ -39,5 +39,49 @@
             <a href="/register" class="btn">Зарегистрироваться</a>
         </div>
     </main>
+
+    <!-- Скрипт для аутентификации -->
+    <script>
+        const API_BASE = "http://localhost:8080/api";
+
+        // Обработка отправки формы
+        document.getElementById("loginForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const email = document.getElementById("email").value;
+            const password = document.getElementById("password").value;
+
+            const response = await fetch(`${API_BASE}/login`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email, password }), // Отправляем email и пароль
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                const token = data.token;
+
+                // Сохраняем токен в localStorage
+                localStorage.setItem("jwt", token);
+
+                alert("Вы успешно вошли!");
+                window.location.href = "/dashboard"; // Перенаправляем на защищённую страницу
+            } else {
+                const errorData = await response.json(); // Читаем тело ответа
+                console.error("Server error:", errorData); // Логируем ошибку
+                alert("Ошибка входа. Проверьте email и пароль.");
+            }
+        });
+
+        // Проверка аутентификации при загрузке страницы
+        window.addEventListener("load", () => {
+            const token = localStorage.getItem("jwt");
+
+            if (token) {
+                // Если токен есть, перенаправляем на защищённую страницу
+                window.location.href = "/dashboard";
+            }
+        });
+    </script>
 </body>
 </html>

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <!-- Хедер -->
+    <header class="header">
+        <a href="/" class="logo">Dnevnik.kz</a>
+        <nav>
+            <ul>
+                <li><a href="/list">Список</a></li>
+                <li><a href="/teachers">Учителя</a></li>
+                <li><a href="/dashboard">Личный кабинет</a></li>
+                <li><a href="/about">О нас</a></li>
+                <li><a href="/contact">Админ</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- Основной контент -->
+    <main>
+        <h1>Личный кабинет</h1>
+        <div id="userInfo">
+            <!-- Здесь будет информация о пользователе -->
+        </div>
+        <button id="logoutButton" class="btn">Выйти</button>
+    </main>
+
+    <!-- Скрипт для работы с данными пользователя и выходом -->
+    <script>
+        // Функция для отображения информации о пользователе
+        function displayUserInfo() {
+            const token = localStorage.getItem("jwt");
+
+            if (!token) {
+                // Если токена нет, перенаправляем на страницу входа
+                window.location.href = "/login";
+                return;
+            }
+
+            // Декодируем payload из JWT
+            try {
+                const payloadBase64 = token.split(".")[1]; // Берём вторую часть токена (payload)
+                const payloadJson = atob(payloadBase64); // Декодируем из base64
+                const payload = JSON.parse(payloadJson); // Парсим JSON
+
+                // Отображаем информацию о пользователе
+                const userInfo = document.getElementById("userInfo");
+                userInfo.innerHTML = `
+                    <p><strong>Имя:</strong> ${payload.Username}</p>
+                    <p><strong>Email:</strong> ${payload.Email}</p>
+                    <p><strong>Роль:</strong> ${payload.Role}</p>
+                    <p><strong>Токен:</strong> <code>${token}</code></p>
+                `;
+            } catch (error) {
+                console.error("Failed to decode token:", error);
+                alert("Ошибка при декодировании токена. Пожалуйста, войдите снова.");
+                logout(); // Выход из системы
+            }
+        }
+
+        // Функция для выхода из аккаунта
+        function logout() {
+            // Удаляем токен из localStorage
+            localStorage.removeItem("jwt");
+
+            // Перенаправляем на страницу входа
+            window.location.href = "/login";
+        }
+
+        // Отображаем информацию о пользователе при загрузке страницы
+        displayUserInfo();
+
+        // Вешаем обработчик на кнопку выхода
+        document.getElementById("logoutButton").addEventListener("click", logout);
+    </script>
+</body>
+</html>
