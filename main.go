@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -10,6 +12,7 @@ import (
 	"regexp"
 
 	"github.com/sirupsen/logrus"
+	"gopkg.in/gomail.v2"
 
 	"go.mongodb.org/mongo-driver/mongo/options"
 
@@ -123,6 +126,59 @@ func postHandler(w http.ResponseWriter, r *http.Request) {
 // CRUD Functions (Create, Read, Update, Delete)
 
 // Пример создания пользователя с логированием
+func generateToken() (string, error) {
+	b := make([]byte, 16)
+	_, err := rand.Read(b)
+	if err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(b), nil
+}
+
+func sendConfirmationEmail(email, token string) error {
+	m := gomail.NewMessage()
+	m.SetHeader("From", "dildahanz@mail.ru")
+	m.SetHeader("To", email)
+	m.SetHeader("Subject", "Confirm your registration")
+	m.SetBody("text/plain", "Please confirm your registration by clicking the link: http://localhost:8080/confirm?token="+token)
+
+	d := gomail.NewDialer("smtp.mail.ru", 587, "dildahanz@mail.ru", "NmwPuFt4svU9eiDa0Bu0")
+
+	return d.DialAndSend(m)
+}
+
+func confirmUser(w http.ResponseWriter, r *http.Request) {
+	token := r.URL.Query().Get("token")
+	if token == "" {
+		http.Error(w, "Token is required", http.StatusBadRequest)
+		return
+	}
+
+	user, exists := unconfirmedUsers[token]
+	if !exists {
+		http.Error(w, "Invalid or expired token", http.StatusBadRequest)
+		return
+	}
+
+	collection := client.Database("your_db_name").Collection("users")
+	result, err := collection.InsertOne(context.Background(), user)
+	if err != nil {
+		http.Error(w, "Failed to insert user", http.StatusInternalServerError)
+		return
+	}
+
+	user.ID = result.InsertedID.(primitive.ObjectID)
+
+	// Удаляем пользователя из временного хранилища
+	delete(unconfirmedUsers, token)
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{"message": "User confirmed and created successfully"})
+}
+
+var unconfirmedUsers = make(map[string]User) // Временное хранилище для неподтвержденных пользователей
+
 func createUser(w http.ResponseWriter, r *http.Request) {
 	log := setupLogger()
 
@@ -143,14 +199,21 @@ func createUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	collection := client.Database("your_db_name").Collection("users")
-	result, err := collection.InsertOne(context.Background(), user)
+	token, err := generateToken()
 	if err != nil {
-		http.Error(w, "Failed to insert user", http.StatusInternalServerError)
+		http.Error(w, "Failed to generate token", http.StatusInternalServerError)
 		return
 	}
 
-	user.ID = result.InsertedID.(primitive.ObjectID)
+	// Сохраняем пользователя во временное хранилище
+	unconfirmedUsers[token] = user
+
+	// Отправляем email с токеном
+	err = sendConfirmationEmail(user.Email, token)
+	if err != nil {
+		http.Error(w, "Failed to send confirmation email", http.StatusInternalServerError)
+		return
+	}
 
 	// Логирование
 	log.WithFields(logrus.Fields{
@@ -401,6 +464,8 @@ func main() {
 	http.HandleFunc("/api/users/update", updateUser)
 	http.HandleFunc("/api/users/delete", deleteUser)
 	http.HandleFunc("/api/users/get", getUserByID)
+
+	http.HandleFunc("/confirm", confirmUser)
 
 	log := setupLogger()
 

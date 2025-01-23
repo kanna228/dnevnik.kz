@@ -45,24 +45,23 @@
         <script>
             const API_BASE = "http://localhost:8080/api/users";
     
-            // CREATE User
             document.getElementById("createStudentForm").addEventListener("submit", async (e) => {
                 e.preventDefault();
-    
+
                 const name = document.getElementById("name").value;
                 const email = document.getElementById("email").value;
                 const password = document.getElementById("password").value;
-                const role = document.getElementById("role").value; // Get the selected role
+                const role = document.getElementById("role").value;
 
                 const response = await fetch(`${API_BASE}/create`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ name, email, password, role }), // Send the role in the body
+                    body: JSON.stringify({ name, email, password, role }),
                 });
-    
+
                 if (response.ok) {
-                    alert("User created successfully!");
-                    // You can add any logic to redirect or clear the form
+                    alert("Confirmation email sent! Please check your email to confirm registration.");
+                    // Очистка формы или перенаправление
                 } else {
                     alert("Failed to create user");
                 }
