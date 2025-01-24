@@ -628,8 +628,15 @@ func main() {
 	http.HandleFunc("/support", handleSupportRequest)
 	http.HandleFunc("/test-email", testEmailHandler)
 	// Start Server
-	fmt.Println("Server running at http://localhost:8080")
-	if err := http.ListenAndServe(":8080", nil); err != nil {
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080" // Default to 8080 if the PORT variable is not set (for local dev)
+	}
+
+	// Listen on all network interfaces, so it's available to everyone
+	fmt.Printf("Server running at http://0.0.0.0:%s\n", port)
+
+	if err := http.ListenAndServe("0.0.0.0:"+port, nil); err != nil {
 		log.Fatal("Server Error:", err)
 	}
 }
