@@ -16,8 +16,29 @@ import (
 var client *mongo.Client
 
 func ConnectToMongoDB() (*mongo.Client, error) {
-	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
-	return mongo.Connect(context.Background(), clientOptions)
+	// Read the MongoDB URI from the environment variable
+	mongoURI := os.Getenv("MONGO_URI")
+	if mongoURI == "" {
+		log.Fatal("MONGO_URI environment variable is not set")
+	}
+
+	// Set MongoDB client options with the URI
+	clientOptions := options.Client().ApplyURI(mongoURI)
+
+	// Connect to MongoDB
+	client, err := mongo.Connect(context.Background(), clientOptions)
+	if err != nil {
+		return nil, err
+	}
+
+	// Ping the database to ensure connection is successful
+	err = client.Ping(context.Background(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	log.Println("Successfully connected to MongoDB")
+	return client, nil
 }
 
 func DisconnectMongoDB() {
