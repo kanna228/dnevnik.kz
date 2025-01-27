@@ -634,7 +634,8 @@ func main() {
 	}
 
 	// Listen on all network interfaces, so it's available to everyone
-	fmt.Printf("Server running at http://0.0.0.0:%s\n", port)
+	// Запускаем сервер, слушающий все интерфейсы (для доступа с любого устройства)
+	fmt.Printf("Server running at http://localhost:%s\n", port)
 
 	if err := http.ListenAndServe("0.0.0.0:"+port, nil); err != nil {
 		log.Fatal("Server Error:", err)
