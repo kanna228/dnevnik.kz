@@ -97,8 +97,8 @@
 
  
      <h2>Students List</h2>
-
-      <div class="filter-container">
+     
+     <div class="filter-container">
         <select id="roleFilter">
             <option value="">Все роли</option>
             <option value="student">Студенты</option>
@@ -128,7 +128,7 @@
      </table>
  
      <script>
-         const API_BASE = "http://localhost:8080/api/users";
+         const API_BASE = "https://ef58-178-90-70-145.ngrok-free.app/api/users";
  
          // CREATE Student
          document.getElementById("createStudentForm").addEventListener("submit", async (e) => {
@@ -155,50 +155,52 @@
  
         // READ Students
         async function loadStudents() {
-            try {
-                const response = await fetch(`${API_BASE}/all`);
+        try {
+        const response = await fetch(`${API_BASE}/all`);
 
-                // Проверка на успешный ответ от сервера (200-299)
-                if (!response.ok) {
-                    throw new Error(`No Users found in the database.`);
-                }
-
-                const students = await response.json();
-
-                // Если данных нет (пустой массив)
-                if (Array.isArray(students) && students.length === 0) {
-                    const tableBody = document.querySelector("#studentsTable tbody");
-                    tableBody.innerHTML = "<tr><td colspan='6'>No students found in the database.</td></tr>";
-                    return;
-                }
-
-                // Если данные есть, выводим их в таблицу
-                const tableBody = document.querySelector("#studentsTable tbody");
-                tableBody.innerHTML = "";
-
-                students.forEach((student) => {
-                    const row = document.createElement("tr");
-                    row.innerHTML = `
-                        <td>${student.id}</td>
-                        <td>${student.name}</td>
-                        <td>${student.email}</td>
-                        <td>${student.password}</td>
-                        <td>${student.role}</td>
-                        <td>
-                            <button onclick="deleteStudent('${student.id}')">Delete</button>
-                            <button onclick="updateStudent('${student.id}')">Update</button>
-                        </td>
-                    `;
-                    tableBody.appendChild(row);
-                });
-
-            } catch (error) {
-                // Обработка ошибок, если запрос не удался
-                const tableBody = document.querySelector("#studentsTable tbody");
-                tableBody.innerHTML = `<tr><td colspan='6'>Error: ${error.message}</td></tr>`;
-                console.error("Error loading students:", error);
-            }
+        if (!response.ok) {
+            throw new Error(`Server error: ${response.status} ${response.statusText}`);
         }
+
+        const contentType = response.headers.get("Content-Type");
+        if (!contentType || !contentType.includes("application/json")) {
+            throw new Error("Expected JSON response but received something else.");
+        }
+
+        const students = await response.json();
+
+        // Proceed with processing the JSON data
+        if (Array.isArray(students) && students.length === 0) {
+            const tableBody = document.querySelector("#studentsTable tbody");
+            tableBody.innerHTML = "<tr><td colspan='6'>No students found in the database.</td></tr>";
+            return;
+        }
+
+        const tableBody = document.querySelector("#studentsTable tbody");
+        tableBody.innerHTML = "";
+
+        students.forEach((student) => {
+            const row = document.createElement("tr");
+            row.innerHTML = `
+                <td>${student.id}</td>
+                <td>${student.name}</td>
+                <td>${student.email}</td>
+                <td>${student.password}</td>
+                <td>${student.role}</td>
+                <td>
+                    <button onclick="deleteStudent('${student.id}')">Delete</button>
+                    <button onclick="updateStudent('${student.id}')">Update</button>
+                </td>
+            `;
+            tableBody.appendChild(row);
+            });
+        } catch (error) {
+            const tableBody = document.querySelector("#studentsTable tbody");
+            tableBody.innerHTML = `<tr><td colspan='6'>Error: ${error.message}</td></tr>`;
+            console.error("Error loading students:", error);
+        }
+
+    }
 
 
 

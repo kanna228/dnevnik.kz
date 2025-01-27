@@ -571,8 +571,26 @@ func getUserInfoHandler(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+func corsMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "https://f9bb-178-90-70-145.ngrok-free.app") // Allow your ngrok URL
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+		w.Header().Set("Access-Control-Allow-Credentials", "true")
+
+		// Handle preflight (OPTIONS) request
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+
+		// Pass the request to the next handler
+		next.ServeHTTP(w, r)
+	})
+}
+
 func main() {
-	fs := http.FileServer(http.Dir("./static")) // Указываем папку "static"
+	fs := http.FileServer(http.Dir("./static"))
 	http.Handle("/static/", http.StripPrefix("/static/", fs))
 
 	// Connect to MongoDB
@@ -583,17 +601,23 @@ func main() {
 	}
 	defer DisconnectMongoDB()
 
-	// Загрузить пользователей из файла users.json
+	// Load users from JSON
 	users, err := loadUsersFromJSON("users.json")
 	if err != nil {
 		log.Println("Error loading users from JSON:", err)
 	} else {
-		insertUsersIfNotExist(users) // Вставить пользователей, если их нет в базе данных
+		insertUsersIfNotExist(users)
 	}
 
-	http.HandleFunc("/api/users/sorted", GetUsersSorted)
+	// Apply CORS middleware to API routes
+	http.Handle("/api/users/sorted", corsMiddleware(http.HandlerFunc(GetUsersSorted)))
+	http.Handle("/api/users/create", corsMiddleware(http.HandlerFunc(createUser)))
+	http.Handle("/api/users/all", corsMiddleware(http.HandlerFunc(getAllUsers)))
+	http.Handle("/api/users/update", corsMiddleware(http.HandlerFunc(updateUser)))
+	http.Handle("/api/users/delete", corsMiddleware(http.HandlerFunc(deleteUser)))
+	http.Handle("/api/users/get", corsMiddleware(http.HandlerFunc(getUserByID)))
 
-	// Existing Routes
+	// Other routes
 	http.HandleFunc("/", main_page)
 	http.HandleFunc("/login", login_page)
 	http.HandleFunc("/teacher_login", teacher_login_page)
@@ -602,39 +626,25 @@ func main() {
 	http.HandleFunc("/api", postHandler)
 	http.HandleFunc("/list", list)
 	http.HandleFunc("/dashboard", dashboard)
-
-	// CRUD Routes
-	http.HandleFunc("/api/users/create", createUser)
-	http.HandleFunc("/api/users/all", getAllUsers)
-	http.HandleFunc("/api/users/update", updateUser)
-	http.HandleFunc("/api/users/delete", deleteUser)
-	http.HandleFunc("/api/users/get", getUserByID)
-
 	http.HandleFunc("/confirm", confirmUser)
-
 	http.HandleFunc("/api/login", loginHandler)
 	http.HandleFunc("/api/protected", protectedHandler)
 	http.HandleFunc("/api/user", getUserInfoHandler)
+	http.HandleFunc("/api/contact", handleSupportRequest)
+	http.HandleFunc("/support", handleSupportRequest)
+	http.HandleFunc("/test-email", testEmailHandler)
 
 	log := setupLogger()
-
 	log.WithFields(logrus.Fields{
 		"action": "start",
 		"status": "success",
 	}).Info("Application started successfully")
 
-	http.HandleFunc("/api/contact", handleSupportRequest)
-	// New route for handling support requests
-	http.HandleFunc("/support", handleSupportRequest)
-	http.HandleFunc("/test-email", testEmailHandler)
-	// Start Server
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "8080" // Default to 8080 if the PORT variable is not set (for local dev)
+		port = "8080"
 	}
 
-	// Listen on all network interfaces, so it's available to everyone
-	// Запускаем сервер, слушающий все интерфейсы (для доступа с любого устройства)
 	fmt.Printf("Server running at http://localhost:%s\n", port)
 
 	if err := http.ListenAndServe("0.0.0.0:"+port, nil); err != nil {
