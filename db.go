@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -16,6 +17,12 @@ import (
 var client *mongo.Client
 
 func ConnectToMongoDB() (*mongo.Client, error) {
+	// Load environment variables from the .env file
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
 	// Read the MongoDB URI from the environment variable
 	mongoURI := os.Getenv("MONGO_URI")
 	if mongoURI == "" {
@@ -40,7 +47,6 @@ func ConnectToMongoDB() (*mongo.Client, error) {
 	log.Println("Successfully connected to MongoDB")
 	return client, nil
 }
-
 func DisconnectMongoDB() {
 	if err := client.Disconnect(context.Background()); err != nil {
 		log.Fatal("Failed to disconnect from MongoDB:", err)

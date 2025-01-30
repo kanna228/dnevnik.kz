@@ -32,7 +32,9 @@
 
     <!-- Скрипт для работы с данными пользователя и выходом -->
     <script>
-        const API_BASE = "https://dnevnik-kz.onrender.com/api";
+        const API_BASE = window.location.hostname === "localhost" 
+        ? "http://localhost:8080/api" // Local API
+        : "https://dnevnik-kz.onrender.com/api"; // Production API
 
         async function fetchUserInfo() {
             const token = localStorage.getItem("jwt");
