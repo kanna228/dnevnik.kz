@@ -493,16 +493,6 @@ func getUserByID(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func testEmailHandler(w http.ResponseWriter, r *http.Request) {
-	err := sendEmail("amigo553@mail.ru", "Test Subject", "This is a test email.")
-	if err != nil {
-		log.Println("Failed to send test email:", err)
-		http.Error(w, "Failed to send test email", http.StatusInternalServerError)
-		return
-	}
-	w.Write([]byte("Test email sent successfully!"))
-}
-
 func GetUsersSorted(w http.ResponseWriter, r *http.Request) {
 	role := r.URL.Query().Get("role")       // Получаем фильтр роли
 	sortOrder := r.URL.Query().Get("order") // Получаем сортировку (asc или desc)
@@ -573,7 +563,7 @@ func getUserInfoHandler(w http.ResponseWriter, r *http.Request) {
 
 func corsMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "https://f9bb-178-90-70-145.ngrok-free.app") // Allow your ngrok URL
+		w.Header().Set("Access-Control-Allow-Origin", "https://dnevnik-kz.onrender.com") // Allow your ngrok URL
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
 		w.Header().Set("Access-Control-Allow-Credentials", "true")
@@ -587,6 +577,16 @@ func corsMiddleware(next http.Handler) http.Handler {
 		// Pass the request to the next handler
 		next.ServeHTTP(w, r)
 	})
+}
+
+func testEmailHandler(w http.ResponseWriter, r *http.Request) {
+	err := sendEmail("amigo553@mail.ru", "Test Subject", "This is a test email.")
+	if err != nil {
+		log.Println("Failed to send test email:", err)
+		http.Error(w, "Failed to send test email", http.StatusInternalServerError)
+		return
+	}
+	w.Write([]byte("Test email sent successfully!"))
 }
 
 func main() {
