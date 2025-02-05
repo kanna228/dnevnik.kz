@@ -1,13 +1,16 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"regexp"
 
+	"go.mongodb.org/mongo-driver/bson"
 	"gopkg.in/gomail.v2"
 )
 
@@ -108,4 +111,37 @@ func handleSupportRequest(w http.ResponseWriter, r *http.Request) {
 	// Ответ пользователю
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(ResponseData{Status: "success", Message: "Ваш запрос отправлен"})
+}
+
+func testEmailHandler(w http.ResponseWriter, r *http.Request) {
+	err := sendEmail("amigo553@mail.ru", "Test Subject", "This is a test email.")
+	if err != nil {
+		log.Println("Failed to send test email:", err)
+		http.Error(w, "Failed to send test email", http.StatusInternalServerError)
+		return
+	}
+	w.Write([]byte("Test email sent successfully!"))
+}
+
+func findUserByEmail(email string) (*User, error) {
+	collection := client.Database("your_db_name").Collection("users")
+	var user User
+	filter := bson.M{"email": email}
+	err := collection.FindOne(context.Background(), filter).Decode(&user)
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
+func sendConfirmationEmail(email, token string) error {
+	m := gomail.NewMessage()
+	m.SetHeader("From", "dildahanz@mail.ru")
+	m.SetHeader("To", email)
+	m.SetHeader("Subject", "Confirm your registration")
+	m.SetBody("text/plain", "Please confirm your registration by clicking the link: http://localhost:8080/confirm?token="+token)
+
+	d := gomail.NewDialer("smtp.mail.ru", 587, "dildahanz@mail.ru", "NmwPuFt4svU9eiDa0Bu0")
+
+	return d.DialAndSend(m)
 }
