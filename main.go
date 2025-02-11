@@ -82,7 +82,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 
 	log.Printf("Login attempt for email: %s", inputUser.Email)
 
-	// Ищем пользователя в базе данных по email
+	// Find user by email in MongoDB
 	dbUser, err := findUserByEmail(inputUser.Email)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
@@ -97,7 +97,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 
 	log.Printf("User found: %+v", dbUser)
 
-	// Проверяем пароль (без хеширования)
+	// Verify password
 	if inputUser.Password != dbUser.Password {
 		log.Println("Invalid password for user:", dbUser.Name)
 		http.Error(w, "Invalid password", http.StatusUnauthorized)
@@ -106,7 +106,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 
 	log.Println("User authenticated:", dbUser.Name)
 
-	// Создание JWT
+	// Generate JWT token
 	expirationTime := time.Now().Add(24 * time.Hour)
 	claims := &Claims{
 		Username: dbUser.Name,
@@ -125,9 +125,15 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Отправка токена клиенту
+	// Convert user ID to string and send it in the response
+	userID := dbUser.ID.Hex()
+
+	// Send token and user_id to frontend
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{"token": tokenString})
+	json.NewEncoder(w).Encode(map[string]string{
+		"token":   tokenString,
+		"user_id": userID, // Convert ObjectID to string
+	})
 }
 
 func protectedHandler(w http.ResponseWriter, r *http.Request) {
@@ -236,22 +242,22 @@ func postHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(ResponseData{Status: "success", Message: "Data successfully received"})
 }
 
-func corsMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "https://dnevnik-kz.onrender.com")
+func corsMiddleware(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:8080") // Allow frontend
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
 		w.Header().Set("Access-Control-Allow-Credentials", "true")
 
-		// Handle preflight (OPTIONS) request
+		// Handle preflight requests (OPTIONS method)
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusNoContent)
 			return
 		}
 
 		// Pass the request to the next handler
-		next.ServeHTTP(w, r)
-	})
+		next(w, r)
+	}
 }
 
 func main() {
@@ -305,6 +311,9 @@ func main() {
 		"status": "success",
 	}).Info("Application started successfully")
 
+	go StartPaymentService()
+	time.Sleep(1 * time.Second)
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
@@ -315,4 +324,5 @@ func main() {
 	if err := http.ListenAndServe("0.0.0.0:"+port, nil); err != nil {
 		log.Fatal("Server Error:", err)
 	}
+
 }

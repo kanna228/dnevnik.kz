@@ -31,7 +31,18 @@
         <h2>Расписание</h2>
         <p>Здесь можно будет посмотреть актуальное расписание уроков.</p>
     </div>
+    <div class="container">
+        <h1>Олимпиада среди участников школы</h1>
+        <p>Дорогие ученики! Приглашаем вас принять участие в увлекательном соревновании, где каждый сможет проявить свои знания.</p>
+        <button id="payButton">Оплатить участие</button>
+
+    </div>
     
+    <script>
+        document.getElementById("payButton").addEventListener("click", function () {
+            window.location.href = "http://localhost:8080/payment"; // ✅ Redirect to payment page on `8080`
+        });
+        </script>
     <footer class="footer">
         <p>&copy; 2025 Dnevnik.kz - Все права защищены.</p>
     </footer>

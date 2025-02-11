@@ -45,47 +45,53 @@
     <!-- Скрипт для аутентификации -->
     <script>
         const API_BASE = window.location.hostname === "localhost" 
-        ? "http://localhost:8080/api" // Local API
-        : "https://dnevnik-kz.onrender.com/api"; // Production API
-
-        // Обработка отправки формы
+            ? "http://localhost:8080/api" 
+            : "https://dnevnik-kz.onrender.com/api"; 
+    
         document.getElementById("loginForm").addEventListener("submit", async (e) => {
             e.preventDefault();
-
+    
             const email = document.getElementById("email").value;
             const password = document.getElementById("password").value;
-
+    
             const response = await fetch(`${API_BASE}/login`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email, password }), // Отправляем email и пароль
+                body: JSON.stringify({ email, password }), 
             });
-
+    
             if (response.ok) {
                 const data = await response.json();
                 const token = data.token;
-
-                // Сохраняем токен в localStorage
+                const userId = data.user_id; // Retrieve user ID from response
+    
+                // Store token and user ID in localStorage
                 localStorage.setItem("jwt", token);
-
+                localStorage.setItem("user_id", userId);
+    
+                console.log("✅ Logged in! Stored user_id:", userId);
                 alert("Вы успешно вошли!");
-                window.location.href = "/dashboard"; // Перенаправляем на защищённую страницу
+                window.location.href = "/dashboard"; 
             } else {
-                const errorData = await response.json(); // Читаем тело ответа
-                console.error("Server error:", errorData); // Логируем ошибку
+                const errorData = await response.json(); 
+                console.error("Server error:", errorData); 
                 alert("Ошибка входа. Проверьте email и пароль.");
             }
         });
-
-        // Проверка аутентификации при загрузке страницы
+    
+        // Check if user is already logged in
         window.addEventListener("load", () => {
             const token = localStorage.getItem("jwt");
-
-            if (token) {
-                // Если токен есть, перенаправляем на защищённую страницу
+            const userId = localStorage.getItem("user_id");
+            console.log("📝 Checking stored data:", { token, userId });
+    
+            if (token && userId) {
                 window.location.href = "/dashboard";
             }
         });
     </script>
+    
+    
+    
 </body>
 </html>

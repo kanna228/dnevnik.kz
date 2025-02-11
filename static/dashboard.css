@@ -1,0 +1,61 @@
+/* Общие стили */
+
+
+/* Хедер */
+.header {
+    background-color: #0073e6;
+    color: white;
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+
+
+
+/* Основной контент */
+main {
+    max-width: 800px;
+    margin: 50px auto;
+    padding: 20px;
+    background-color: white;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    border-radius: 5px;
+    text-align: center;
+}
+
+h1 {
+    color: #0073e6;
+}
+
+/* Информация о пользователе */
+#userInfo {
+    margin: 20px 0;
+    padding: 15px;
+    background-color: #f9f9f9;
+    border-left: 5px solid #0073e6;
+    text-align: left;
+}
+
+#userInfo p {
+    margin: 10px 0;
+    font-size: 16px;
+}
+
+/* Кнопка выхода */
+.btn {
+    display: inline-block;
+    background-color: #548ae8;
+    color: white;
+    padding: 10px 20px;
+    font-size: 16px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.btn:hover {
+    background-color: #c9302c;
+}

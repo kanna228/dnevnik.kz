@@ -1,0 +1,68 @@
+.container {
+    max-width: 500px;
+    margin: 50px auto;
+    padding: 20px;
+    background-color: white;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    border-radius: 5px;
+    text-align: center;
+}
+
+h1 {
+    color: #0073e6;
+}
+
+/* Payment Form */
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    padding: 10px;
+}
+
+label {
+    font-weight: bold;
+    text-align: left;
+}
+
+input {
+    width: 100%;
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+button {
+    background-color: #0073e6;
+    color: white;
+    font-size: 18px;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+button:hover {
+    background-color: #005bb5;
+}
+
+/* Payment Status */
+#paymentStatus {
+    margin-top: 15px;
+    font-weight: bold;
+    color: #0073e6;
+}
+
+/* Mobile Styles */
+@media screen and (max-width: 600px) {
+    .container {
+        width: 90%;
+        padding: 15px;
+    }
+
+    input, button {
+        font-size: 16px;
+    }
+}
