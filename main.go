@@ -33,6 +33,7 @@ type ResponseData struct {
 var jwtKey = []byte("mY5uP8x/A1bC2dE3fG4hI5jK6lM7nO8pQ9rS0tU1vW2X3yZ4")
 
 type Claims struct {
+	UserID   string `json:"user_id"` // Добавлен user_id
 	Username string `json:"username"`
 	Email    string `json:"email"`
 	Role     string `json:"role"`
@@ -106,9 +107,13 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 
 	log.Println("User authenticated:", dbUser.Name)
 
+	// Convert user ID to string
+	userID := dbUser.ID.Hex()
+
 	// Generate JWT token
 	expirationTime := time.Now().Add(24 * time.Hour)
 	claims := &Claims{
+		UserID:   userID, // Добавляем user_id в токен
 		Username: dbUser.Name,
 		Email:    dbUser.Email,
 		Role:     dbUser.Role,
@@ -125,14 +130,11 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Convert user ID to string and send it in the response
-	userID := dbUser.ID.Hex()
-
 	// Send token and user_id to frontend
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{
 		"token":   tokenString,
-		"user_id": userID, // Convert ObjectID to string
+		"user_id": dbUser.ID.Hex(),
 	})
 }
 
@@ -176,7 +178,6 @@ func setupLogger() *logrus.Logger {
 }
 
 func getUserInfoHandler(w http.ResponseWriter, r *http.Request) {
-
 	// Проверяем токен
 	tokenString := r.Header.Get("Authorization")
 	if tokenString == "" {
@@ -197,6 +198,7 @@ func getUserInfoHandler(w http.ResponseWriter, r *http.Request) {
 	// Возвращаем информацию о пользователе
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{
+		"id":       claims.UserID, // Теперь используем UserID из Claims
 		"username": claims.Username,
 		"email":    claims.Email,
 		"role":     claims.Role,
@@ -304,6 +306,8 @@ func main() {
 	http.HandleFunc("/api/contact", handleSupportRequest)
 	http.HandleFunc("/support", handleSupportRequest)
 	http.HandleFunc("/test-email", testEmailHandler)
+
+	RegisterScheduleRoutes()
 
 	log := setupLogger()
 	log.WithFields(logrus.Fields{

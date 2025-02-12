@@ -28,6 +28,9 @@
         <div id="userInfo">
             <!-- Здесь будет информация о пользователе -->
         </div>
+        <div id="scheduleInfo">
+            <!-- Здесь будет отображаться расписание -->
+        </div>
         <button id="logoutButton" class="btn">Выйти</button>
     </main>
 
@@ -85,6 +88,82 @@
 
         // Вешаем обработчик на кнопку выхода
         document.getElementById("logoutButton").addEventListener("click", logout);
+
+        async function fetchSchedule() {
+            const token = localStorage.getItem("jwt");
+        
+            if (!token) {
+                window.location.href = "/login";
+                return;
+            }
+        
+            const response = await fetch(`${API_BASE}/schedule`, {
+                method: "GET",
+                headers: {
+                    "Authorization": token,
+                },
+            });
+        
+            if (response.ok) {
+                const scheduleData = await response.json();
+                displaySchedule(scheduleData);
+            } else {
+                document.getElementById("scheduleInfo").innerHTML = "<p>Расписание не найдено</p>";
+            }
+        }
+        
+        function displaySchedule(scheduleData) {
+            let scheduleHTML = `
+                <h2>Расписание</h2>
+                <div class="schedule-container">
+                    <table class="schedule-table">
+                        <thead>
+                            <tr>
+                                <th>День</th>
+                                <th>Время</th>
+                                <th>Предмет</th>
+                                <th>Учитель</th>
+                                <th>Кабинет</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+        
+            scheduleData.schedule.forEach(day => {
+                // Добавляем название дня недели в отдельную строку
+                scheduleHTML += `
+                    <tr>
+                        <td class="day-cell" rowspan="${day.lessons.length}">${day.day}</td>
+                `;
+        
+                day.lessons.forEach((lesson, index) => {
+                    // Первую строку открыли выше, остальные строки начинаем здесь
+                    if (index !== 0) {
+                        scheduleHTML += `<tr>`;
+                    }
+        
+                    scheduleHTML += `
+                        <td>${lesson.time}</td>
+                        <td>${lesson.subject}</td>
+                        <td>${lesson.teacher}</td>
+                        <td>${lesson.room}</td>
+                    </tr>
+                    `;
+                });
+            });
+        
+            scheduleHTML += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        
+            document.getElementById("scheduleInfo").innerHTML = scheduleHTML;
+        }
+        
+        // Вызов функции загрузки расписания при загрузке страницы
+        fetchSchedule();
     </script>
+    
 </body>
 </html>

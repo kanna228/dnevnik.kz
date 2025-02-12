@@ -16,7 +16,7 @@
 
 /* Основной контент */
 main {
-    max-width: 800px;
+    max-width: 1000px;
     margin: 50px auto;
     padding: 20px;
     background-color: white;
@@ -59,3 +59,70 @@ h1 {
 .btn:hover {
     background-color: #c9302c;
 }
+
+.schedule-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 30px;
+}
+
+.schedule-table {
+    width: 100%;
+    max-width: 900px;
+    border-collapse: collapse;
+    font-size: 16px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    overflow: hidden;
+    background: white;
+}
+
+.schedule-table thead {
+    background-color: #007bff;
+    color: white;
+    font-size: 18px;
+}
+
+.schedule-table th, .schedule-table td {
+    padding: 15px;
+    text-align: center;
+    border-bottom: 1px solid #ddd;
+}
+
+.schedule-table tbody tr:nth-child(even) {
+    background-color: #f2f2f2;
+}
+
+.schedule-table tbody tr:hover {
+    background-color: #e6f7ff;
+}
+
+.day-cell {
+    font-weight: bold;
+    background-color: #f8f9fa;
+    font-size: 17px;
+}
+
+h2 {
+    text-align: center;
+    font-size: 24px;
+    margin-bottom: 20px;
+}
+
+#logoutButton {
+    display: block;
+    width: 150px;
+    margin: 20px auto;
+    padding: 10px;
+    font-size: 16px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+#logoutButton:hover {
+    background-color: #0056b3;
+}
+

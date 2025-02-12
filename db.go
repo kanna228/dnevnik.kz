@@ -47,6 +47,20 @@ func ConnectToMongoDB() (*mongo.Client, error) {
 	log.Println("Successfully connected to MongoDB")
 	return client, nil
 }
+
+func GetScheduleCollection() *mongo.Collection {
+	if client == nil {
+		var err error
+		client, err = ConnectToMongoDB()
+		if err != nil {
+			log.Fatal("Could not initialize MongoDB client:", err)
+		}
+	}
+
+	dbName := "your_db_name" // Жестко заданное имя базы данных
+	return client.Database(dbName).Collection("schedules")
+}
+
 func DisconnectMongoDB() {
 	if err := client.Disconnect(context.Background()); err != nil {
 		log.Fatal("Failed to disconnect from MongoDB:", err)
