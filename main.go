@@ -283,7 +283,7 @@ func main() {
 	}
 
 	// Apply CORS middleware to API routes
-	http.Handle("/api/users/sorted", corsMiddleware(http.HandlerFunc(GetUsersSorted)))
+	http.Handle("/api/users/sorted", corsMiddleware(http.HandlerFunc(GetUsersSortedWithAggregation)))
 	http.Handle("/api/users/create", corsMiddleware(http.HandlerFunc(createUser)))
 	http.Handle("/api/users/all", corsMiddleware(http.HandlerFunc(getAllUsers)))
 	http.Handle("/api/users/update", corsMiddleware(http.HandlerFunc(updateUser)))

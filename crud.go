@@ -10,10 +10,9 @@ import (
 
 	"github.com/sirupsen/logrus"
 
-	"go.mongodb.org/mongo-driver/mongo/options"
-
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 func confirmUser(w http.ResponseWriter, r *http.Request) {
@@ -267,27 +266,32 @@ func getUserByID(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func GetUsersSorted(w http.ResponseWriter, r *http.Request) {
-	role := r.URL.Query().Get("role")       // Получаем фильтр роли
-	sortOrder := r.URL.Query().Get("order") // Получаем сортировку (asc или desc)
+func GetUsersSortedWithAggregation(w http.ResponseWriter, r *http.Request) {
+	role := r.URL.Query().Get("role")       // Фильтр по роли
+	sortOrder := r.URL.Query().Get("order") // Сортировка (asc / desc)
 
-	sort := 1 // По умолчанию сортировка A-Z
+	sort := 1 // A-Z
 	if sortOrder == "desc" {
 		sort = -1 // Z-A
 	}
 
-	// Фильтр для MongoDB
-	filter := bson.M{}
+	collection := client.Database("your_db_name").Collection("users")
+
+	// Агрегационный pipeline
+	pipeline := mongo.Pipeline{}
+
+	// Фильтр по роли (если передан)
 	if role != "" {
-		filter["role"] = role
+		pipeline = append(pipeline, bson.D{{Key: "$match", Value: bson.D{{Key: "role", Value: role}}}})
 	}
 
-	collection := client.Database("your_db_name").Collection("users")
-	cursor, err := collection.Find(
-		context.Background(),
-		filter,
-		options.Find().SetSort(bson.D{{Key: "name", Value: sort}}),
+	// Добавляем `upper_name`, чтобы сортировка шла по ВЕРХНЕМУ регистру
+	pipeline = append(pipeline,
+		bson.D{{Key: "$addFields", Value: bson.D{{Key: "upper_name", Value: bson.D{{Key: "$toUpper", Value: "$name"}}}}}},
+		bson.D{{Key: "$sort", Value: bson.D{{Key: "upper_name", Value: sort}}}}, // Сортируем по upper_name
 	)
+
+	cursor, err := collection.Aggregate(context.Background(), pipeline)
 	if err != nil {
 		http.Error(w, "Failed to retrieve users", http.StatusInternalServerError)
 		return
