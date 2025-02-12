@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Поддержка - Чаты</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <link rel="stylesheet" href="/static/help.css">
+</head>
+<body>
+    <header class="header">
+        <a href="/" class="logo">Dnevnik.kz</a>
+        <nav>
+            <ul>
+                <li><a href="/list">Список</a></li>
+                <li><a href="/help">Поддержка</a></li>
+                <li><a href="/dashboard">Личный кабинет</a></li>
+                <li><a href="/about">О нас</a></li>
+                <li><a href="/contact">Админ</a></li>
+            </ul>
+        </nav>
+    </header>
+    <!-- Скрытый элемент для хранения роли пользователя -->
+    <input type="hidden" id="user-role" value="{{.UserRole}}">
+    
+    <main class="chat-container">
+        <h2>Ваши чаты</h2>
+        <div id="chat-list"></div>
+        <button id="create-chat-btn">Создать новый чат</button>
+    </main>
+    
+    <footer class="footer">
+        <p>&copy; 2025 Dnevnik.kz - Все права защищены.</p>
+    </footer>
+
+    <script>
+        const API_BASE = window.location.hostname === "localhost" 
+            ? "http://localhost:8080/api" // Local API
+            : "https://dnevnik-kz.onrender.com/api"; // Production API
+    
+        async function fetchUserInfo() {
+            const token = localStorage.getItem("jwt");
+    
+            if (!token) {
+                // Если токена нет, перенаправляем на страницу входа
+                window.location.href = "/login";
+                return;
+            }
+    
+            const response = await fetch(`${API_BASE}/user`, {
+                method: "GET",
+                headers: {
+                    "Authorization": token, // Передаём токен в заголовке
+                },
+            });
+    
+            if (response.ok) {
+                const userInfo = await response.json();
+                
+                // Если пользователь залогинен, но он учитель — скрываем кнопку
+                if (userInfo.role === "teacher") {
+                    document.getElementById("create-chat-btn").style.display = "none";
+                }
+            } else {
+                alert("Ошибка при получении информации о пользователе");
+                localStorage.removeItem("jwt"); // Удаляем невалидный токен
+                window.location.href = "/login"; // Перенаправляем на вход
+            }
+        }
+        fetchUserInfo();
+    </script>
+    
+</body>
+</html>
+
+
+
+

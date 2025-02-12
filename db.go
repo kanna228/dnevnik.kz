@@ -60,6 +60,18 @@ func GetScheduleCollection() *mongo.Collection {
 	dbName := "your_db_name" // Жестко заданное имя базы данных
 	return client.Database(dbName).Collection("schedules")
 }
+func GetChatsCollection() *mongo.Collection {
+	if client == nil {
+		var err error
+		client, err = ConnectToMongoDB()
+		if err != nil {
+			log.Fatal("Could not initialize MongoDB client:", err)
+		}
+	}
+
+	dbName := "your_db_name" // Жестко заданное имя базы данных
+	return client.Database(dbName).Collection("chats")
+}
 
 func DisconnectMongoDB() {
 	if err := client.Disconnect(context.Background()); err != nil {

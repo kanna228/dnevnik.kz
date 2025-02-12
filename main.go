@@ -72,6 +72,9 @@ func list(w http.ResponseWriter, r *http.Request) {
 func dashboard(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "views/dashboard.html")
 }
+func help(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, "views/help.html")
+}
 
 func loginHandler(w http.ResponseWriter, r *http.Request) {
 	var inputUser User
@@ -289,6 +292,7 @@ func main() {
 	http.Handle("/api/users/update", corsMiddleware(http.HandlerFunc(updateUser)))
 	http.Handle("/api/users/delete", corsMiddleware(http.HandlerFunc(deleteUser)))
 	http.Handle("/api/users/get", corsMiddleware(http.HandlerFunc(getUserByID)))
+	http.Handle("/api/create_chat", corsMiddleware(http.HandlerFunc(CreateChatHandler)))
 
 	// Other routes
 	http.HandleFunc("/", main_page)
@@ -298,6 +302,7 @@ func main() {
 	http.HandleFunc("/contact", handler)
 	http.HandleFunc("/api", postHandler)
 	http.HandleFunc("/list", list)
+	http.HandleFunc("/help", help)
 	http.HandleFunc("/dashboard", dashboard)
 	http.HandleFunc("/confirm", confirmUser)
 	http.HandleFunc("/api/login", loginHandler)
