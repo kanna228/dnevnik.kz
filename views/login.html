@@ -54,28 +54,40 @@
             const email = document.getElementById("email").value;
             const password = document.getElementById("password").value;
     
-            const response = await fetch(`${API_BASE}/login`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email, password }), 
-            });
-    
-            if (response.ok) {
-                const data = await response.json();
-                const token = data.token;
-                const userId = data.user_id; // Retrieve user ID from response
-    
-                // Store token and user ID in localStorage
-                localStorage.setItem("jwt", token);
-                localStorage.setItem("user_id", userId);
-    
-                console.log("✅ Logged in! Stored user_id:", userId);
-                alert("Вы успешно вошли!");
-                window.location.href = "/dashboard"; 
-            } else {
-                const errorData = await response.json(); 
-                console.error("Server error:", errorData); 
-                alert("Ошибка входа. Проверьте email и пароль.");
+            try {
+                const response = await fetch(`${API_BASE}/login`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ email, password }), 
+                });
+        
+                const data = await response.text(); // Читаем ответ как текст
+        
+                if (response.ok) {
+                    const jsonData = JSON.parse(data); // Преобразуем текст в JSON
+                    const token = jsonData.token;
+                    const userId = jsonData.user_id;
+        
+                    // Сохраняем токен и ID пользователя в localStorage
+                    localStorage.setItem("jwt", token);
+                    localStorage.setItem("user_id", userId);
+        
+                    console.log("✅ Logged in! Stored user_id:", userId);
+                    alert("Вы успешно вошли!");
+                    window.location.href = "/dashboard"; 
+                } else {
+                    // Сервер вернул ошибку (например, неверный email или пароль)
+                    if (data.includes("User not found")) {
+                        alert("Пользователь с таким email не найден.");
+                    } else if (data.includes("Invalid password")) {
+                        alert("Неверный пароль.");
+                    } else {
+                        alert("Ошибка входа: " + data);
+                    }
+                }
+            } catch (error) {
+                console.error("❌ Ошибка запроса:", error);
+                alert("Произошла ошибка при попытке входа.");
             }
         });
     

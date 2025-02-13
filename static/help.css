@@ -130,3 +130,31 @@ header nav ul li a:hover {
 #create-chat-btn:hover {
     background-color: #005bb5;
 }
+
+.chat-card {
+    background: white;
+    padding: 15px;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    margin-bottom: 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    cursor: pointer;
+    transition: transform 0.2s ease-in-out;
+}
+
+.chat-card:hover {
+    transform: scale(1.02);
+}
+
+.chat-card h3 {
+    margin: 0;
+    font-size: 18px;
+}
+
+.chat-card p {
+    margin: 5px 0;
+    font-size: 14px;
+    color: #555;
+}

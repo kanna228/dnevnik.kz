@@ -293,6 +293,7 @@ func main() {
 	http.Handle("/api/users/delete", corsMiddleware(http.HandlerFunc(deleteUser)))
 	http.Handle("/api/users/get", corsMiddleware(http.HandlerFunc(getUserByID)))
 	http.Handle("/api/create_chat", corsMiddleware(http.HandlerFunc(CreateChatHandler)))
+	http.Handle("/api/get_chats", corsMiddleware(http.HandlerFunc(GetChatsHandler)))
 
 	// Other routes
 	http.HandleFunc("/", main_page)

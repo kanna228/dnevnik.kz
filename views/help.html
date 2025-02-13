@@ -25,8 +25,8 @@
     
     <main class="chat-container">
         <h2>Ваши чаты</h2>
-        <div id="chat-list"></div>
         <button id="create-chat-btn">Создать новый чат</button>
+        <div id="chat-list"></div>
     </main>
     
     <footer class="footer">
@@ -57,9 +57,12 @@
             if (response.ok) {
                 const userInfo = await response.json();
                 
-                // Если пользователь залогинен, но он учитель — скрываем кнопку
+                // Если пользователь учитель — скрываем кнопку "Создать чат"
                 if (userInfo.role === "teacher") {
                     document.getElementById("create-chat-btn").style.display = "none";
+                } else {
+                    // Если студент — добавляем обработчик на кнопку
+                    document.getElementById("create-chat-btn").addEventListener("click", createChat);
                 }
             } else {
                 alert("Ошибка при получении информации о пользователе");
@@ -67,9 +70,102 @@
                 window.location.href = "/login"; // Перенаправляем на вход
             }
         }
-        fetchUserInfo();
-    </script>
     
+        async function createChat() {
+            const chatTitle = prompt("Введите название чата:");
+            if (!chatTitle) return;
+        
+            const token = localStorage.getItem("jwt");
+            if (!token) {
+                alert("Вы не авторизованы!");
+                return;
+            }
+        
+            const requestBody = JSON.stringify({ title: chatTitle });
+        
+            console.log("🔹 Отправка запроса на создание чата:", requestBody);
+        
+            try {
+                const response = await fetch(`${API_BASE}/create_chat`, {
+                    method: "POST",
+                    headers: { 
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${token}`
+                    },
+                    body: requestBody
+                });
+        
+                const data = await response.text(); // Читаем как текст, чтобы избежать ошибки JSON.parse()
+        
+                console.log("🔹 Ответ сервера:", data);
+        
+                if (response.status === 409) {
+                    alert("У вас уже есть активный чат. Завершите его перед созданием нового.");
+                    return;
+                }
+        
+                if (response.ok) {
+                    alert("Чат успешно создан!");
+                    location.reload();
+                } else {
+                    alert(`Ошибка: ${data}`);
+                }
+            } catch (error) {
+                console.error("❌ Ошибка при отправке запроса:", error);
+                alert("Произошла ошибка при создании чата");
+            }
+        }
+    
+        // Вызываем проверку пользователя при загрузке страницы
+        fetchUserInfo();
+        async function loadChats() {
+            const token = localStorage.getItem("jwt");
+            if (!token) {
+                console.log("❌ Токен отсутствует");
+                return;
+            }
+    
+            try {
+                const response = await fetch(`${API_BASE}/get_chats`, {
+                    method: "GET",
+                    headers: { "Authorization": `Bearer ${token}` }
+                });
+    
+                if (!response.ok) {
+                    throw new Error("Ошибка при загрузке чатов");
+                }
+    
+                const chats = await response.json();
+                console.log("🔹 Загруженные чаты:", chats);
+    
+                const chatList = document.getElementById("chat-list");
+                chatList.innerHTML = ""; // Очищаем список перед добавлением
+    
+                if (chats.length === 0) {
+                    chatList.innerHTML = "<p>Нет активных чатов</p>";
+                    return;
+                }
+    
+                chats.forEach(chat => {
+                    const chatCard = document.createElement("div");
+                    chatCard.classList.add("chat-card");
+                    chatCard.dataset.chatId = chat.id; // Запоминаем ID чата для кликов в будущем
+                    chatCard.innerHTML = `
+                        <h3>${chat.title}</h3>
+                        <p>Статус: ${chat.status === "active" ? "🟢 Активный" : "🔴 Закрыт"}</p>
+                    `;
+                    chatList.appendChild(chatCard);
+                });
+            } catch (error) {
+                console.error("❌ Ошибка при загрузке чатов:", error);
+            }
+        }
+    
+        document.addEventListener("DOMContentLoaded", function() {
+            fetchUserInfo(); // Загружаем информацию о пользователе
+            loadChats(); // Загружаем чаты
+        });
+    </script>
 </body>
 </html>
 
