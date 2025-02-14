@@ -29,21 +29,14 @@ type Transaction struct {
 }
 
 type Customer struct {
-	ID    string `json:"id"`
-	Name  string `json:"name"`
-	Email string `json:"email"`
+	ID    primitive.ObjectID `bson:"_id,omitempty" json:"id"`
+	Name  string             `bson:"name" json:"name"`
+	Email string             `bson:"email" json:"email"`
 }
 
 // Create a new transaction
 func createTransaction(w http.ResponseWriter, r *http.Request) {
 	log.Println("📥 Received request to create a transaction...")
-
-	// Ensure the request is a POST request
-	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		log.Println("❌ Error: Received non-POST request")
-		return
-	}
 
 	// Read request body
 	body, err := io.ReadAll(r.Body)
@@ -76,9 +69,14 @@ func createTransaction(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Fetch user details from MongoDB
-	var user Customer
+	var dbUser struct {
+		ID    primitive.ObjectID `bson:"_id"`
+		Name  string             `bson:"name"`
+		Email string             `bson:"email"`
+	}
+
 	userCollection := client.Database("your_db_name").Collection("users")
-	err = userCollection.FindOne(context.Background(), bson.M{"_id": userID}).Decode(&user)
+	err = userCollection.FindOne(context.Background(), bson.M{"_id": userID}).Decode(&dbUser)
 	if err != nil {
 		http.Error(w, "User not found", http.StatusNotFound)
 		log.Println("❌ User Not Found:", err)
@@ -87,9 +85,13 @@ func createTransaction(w http.ResponseWriter, r *http.Request) {
 
 	// Assign transaction details
 	transaction := Transaction{
-		ID:        primitive.NewObjectID(),
-		CartID:    requestData.CartID,
-		Customer:  user,
+		ID:     primitive.NewObjectID(),
+		CartID: requestData.CartID,
+		Customer: Customer{
+			ID:    dbUser.ID, // ✅ Properly store user ID
+			Name:  dbUser.Name,
+			Email: dbUser.Email,
+		},
 		Amount:    requestData.Amount,
 		Status:    "pending",
 		CreatedAt: time.Now(),
@@ -115,6 +117,7 @@ func createTransaction(w http.ResponseWriter, r *http.Request) {
 
 // Process Payment
 func processPayment(w http.ResponseWriter, r *http.Request) {
+
 	log.Println("📥 Received payment request...")
 
 	// Read the request body
@@ -134,6 +137,7 @@ func processPayment(w http.ResponseWriter, r *http.Request) {
 		Expiry        string `json:"expiry"`
 		CVV           string `json:"cvv"`
 	}
+
 	if err := json.Unmarshal(body, &paymentData); err != nil {
 		http.Error(w, "Invalid JSON format", http.StatusBadRequest)
 		log.Println("❌ JSON Decode Error:", err)
@@ -154,6 +158,16 @@ func processPayment(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, "Transaction not found", http.StatusNotFound)
 		log.Println("❌ Transaction Not Found:", err)
+		return
+	}
+	log.Println("🔍 Checking transaction status:", transaction.Status)
+	if transaction.Status == "paid" {
+		log.Println("❌ Transaction already paid")
+		http.Error(w, "This transaction has already been paid", http.StatusBadRequest)
+		return
+	}
+	if isTransactionPaid(transaction) {
+		http.Error(w, "This transaction has already been paid", http.StatusBadRequest)
 		return
 	}
 
@@ -209,6 +223,51 @@ func processPayment(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]string{"status": status})
+}
+
+// Get Payment Status for Logged-in User
+func getPaymentStatus(w http.ResponseWriter, r *http.Request) {
+	// Fetch user ID from the token or session
+	userID := r.Header.Get("User-ID")
+	log.Println("Fetching transaction for user ID:", userID)
+
+	// Convert userID to ObjectId if it's a string
+	userIDObj, err := primitive.ObjectIDFromHex(userID) // Convert userID string to ObjectId
+	if err != nil {
+		log.Println("Error converting userID to ObjectId:", err)
+		http.Error(w, "Invalid user ID", http.StatusBadRequest)
+		return
+	}
+
+	// Query the transactions collection to find the payment status
+	collection := client.Database("your_db_name").Collection("transactions")
+	var transaction Transaction
+	err = collection.FindOne(context.Background(), bson.M{"customer._id": userIDObj}).Decode(&transaction)
+	if err != nil {
+		log.Println("Transaction not found:", err)
+		http.Error(w, "Transaction not found", http.StatusNotFound)
+		return
+	}
+
+	// Return payment status and other info as JSON
+	response := map[string]interface{}{
+		"status":         transaction.Status,
+		"payment_method": transaction.PaymentMethod,
+		"created_at":     transaction.CreatedAt,
+		"card_number":    transaction.CardNumber,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
+}
+
+func isTransactionPaid(transaction Transaction) bool {
+	log.Println("🔍 Checking transaction status:", transaction.Status)
+	if transaction.Status == "paid" {
+		log.Println("❌ Transaction already paid")
+		return true
+	}
+	return false
 }
 
 // Generate PDF Receipt

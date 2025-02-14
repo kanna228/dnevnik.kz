@@ -27,11 +27,19 @@
         <h1>Личный кабинет</h1>
         <div id="userInfo">
             <!-- Здесь будет информация о пользователе -->
+            
+        </div>
+        <div id="paymentStatus">
+            <!-- Payment status will be displayed here -->
         </div>
         <div id="scheduleInfo">
             <!-- Здесь будет отображаться расписание -->
         </div>
+
+       
+
         <button id="logoutButton" class="btn">Выйти</button>
+        
     </main>
 
     <!-- Скрипт для работы с данными пользователя и выходом -->
@@ -73,6 +81,53 @@
                 <p><strong>Роль:</strong> ${userInfo.role}</p>
             `;
         }
+        async function fetchPaymentStatus() {
+            const userID = localStorage.getItem("user_id");
+            const token = localStorage.getItem("jwt");
+
+            if (!token) {
+                // If no token, redirect to login
+                window.location.href = "/login";
+                return;
+            }
+
+            const response = await fetch(`${API_BASE}/payment-status`, {
+                method: "GET",
+                headers: {
+                    "Authorization": token,  // Include Authorization token
+                    "User-ID": userID        // Include user_id in the headers
+                },
+            });
+    
+        if (response.ok) {
+            const statusData = await response.json();
+            displayPaymentStatus(statusData);
+        } else {
+            console.error("Error fetching payment status");
+        }
+    
+        function displayPaymentStatus(statusData) {
+            const statusDiv = document.getElementById("paymentStatus");
+
+            statusDiv.innerHTML = `
+                <p><strong>Статус оплаты Олимпиады:</strong> ${statusData.status}</p>
+                <p><strong>Способ оплаты:</strong> ${statusData.payment_method}</p>
+                <p><strong>Дата создания:</strong> ${new Date(statusData.created_at).toLocaleString()}</p>
+                <p><strong>Номер карты:</strong> ${statusData.card_number}</p>
+            `;
+        }
+
+
+       
+    }
+
+    function displayPaymentStatus(status) {
+        const statusDiv = document.getElementById("paymentStatus");
+        statusDiv.innerHTML = `Статус оплаты: ${status}`;
+    }
+
+    // Call the function when the page loads
+    fetchPaymentStatus();
 
         // Функция для выхода из аккаунта
         function logout() {

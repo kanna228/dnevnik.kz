@@ -312,6 +312,7 @@ func main() {
 	http.HandleFunc("/api/contact", handleSupportRequest)
 	http.HandleFunc("/support", handleSupportRequest)
 	http.HandleFunc("/test-email", testEmailHandler)
+	http.HandleFunc("/api/payment-status", getPaymentStatus)
 
 	RegisterScheduleRoutes()
 

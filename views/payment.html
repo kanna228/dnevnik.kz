@@ -133,23 +133,23 @@
             console.log("📤 Sending Payment Request:", requestData);
 
             try {
-                const response = await fetch("http://localhost:8081/api/payment", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(requestData)
-                });
+        const response = await fetch("http://localhost:8081/api/payment", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(requestData)
+        });
 
-                if (!response.ok) {
-                    throw new Error("Ошибка при обработке платежа");
-                }
-
-                const result = await response.json();
-                console.log("✅ Payment Response:", result);
-                document.getElementById("paymentStatus").innerText = `Статус оплаты: ${result.status}`;
-            } catch (error) {
-                console.error("❌ Payment Error:", error);
-                alert("Ошибка при обработке платежа!");
-            }
+        const result = await response.json();
+        if (response.ok) {
+            document.getElementById("paymentStatus").innerText = `Статус оплаты: ${result.status}`;
+        } else {
+            // If the transaction is already paid, show the error message
+            alert(result.message || "Ошибка при обработке платежа!");
+        }
+    } catch (error) {
+        console.error("❌ Payment Error:", error);
+        alert("Ошибка при обработке платежа!");
+    }
         });
     </script>
 </body>
