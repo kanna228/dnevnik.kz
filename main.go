@@ -294,6 +294,9 @@ func main() {
 	http.Handle("/api/users/get", corsMiddleware(http.HandlerFunc(getUserByID)))
 	http.Handle("/api/create_chat", corsMiddleware(http.HandlerFunc(CreateChatHandler)))
 	http.Handle("/api/get_chats", corsMiddleware(http.HandlerFunc(GetChatsHandler)))
+	http.Handle("/ws", corsMiddleware(http.HandlerFunc(handleConnections)))
+	http.Handle("/api/get_chat_history", corsMiddleware(http.HandlerFunc(getChatHistoryHandler)))
+	http.Handle("/api/close_chat", corsMiddleware(http.HandlerFunc(CloseChatHandler)))
 
 	// Other routes
 	http.HandleFunc("/", main_page)

@@ -27,6 +27,16 @@
         <h2>Ваши чаты</h2>
         <button id="create-chat-btn">Создать новый чат</button>
         <div id="chat-list"></div>
+        <!-- Модальное окно для чата -->
+        <div id="chat-modal" class="chat-modal" style="display: none;">
+            <div class="chat-modal-content">
+                <span id="close-chat-btn" class="close-btn">&times;</span>
+                <h3 id="chat-title">Название чата</h3>
+                <div id="chat-messages" class="chat-messages"></div>
+                <input type="text" id="chat-input" placeholder="Напишите сообщение..." />
+                <button id="send-chat-btn">Отправить</button>
+            </div>
+        </div>
     </main>
     
     <footer class="footer">
@@ -118,53 +128,225 @@
     
         // Вызываем проверку пользователя при загрузке страницы
         fetchUserInfo();
+        let socket;
+        let currentChatId = null;
+        
+        async function openChat(chatId, chatTitle) {
+            document.getElementById("chat-modal").style.display = "block";
+            document.getElementById("chat-title").innerText = chatTitle;
+        
+            currentChatId = chatId;
+        
+            // Подключаем WebSocket для текущего чата
+            socket = new WebSocket(`ws://localhost:8080/ws?chat_id=${chatId}`);
+        
+            socket.onopen = () => {
+                console.log("✅ WebSocket connected to chat:", chatId);
+            };
+        
+            socket.onmessage = (event) => {
+                const message = JSON.parse(event.data);
+                const chatMessages = document.getElementById("chat-messages");
+        
+                const messageElement = document.createElement("div");
+                messageElement.classList.add("chat-message");
+        
+                if (message.sender_id === localStorage.getItem("user_id")) {
+                    messageElement.classList.add("sent"); // Это ваше сообщение
+                } else {
+                    messageElement.classList.add("received"); // Сообщение от другого пользователя
+                }
+        
+                messageElement.textContent = message.content;
+                chatMessages.appendChild(messageElement);
+        
+                // Прокручиваем чат вниз, чтобы новое сообщение было видно
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            };
+        
+            socket.onclose = () => {
+                console.log("❌ WebSocket disconnected");
+            };
+        
+            // Загружаем историю сообщений из базы данных
+            loadChatHistory(chatId);
+        }
+        
+        async function loadChatHistory(chatId) {
+            const token = localStorage.getItem("jwt");
+            if (!token) {
+                console.log("❌ Токен отсутствует");
+                return;
+            }
+        
+            try {
+                const response = await fetch(`${API_BASE}/get_chat_history?chat_id=${chatId}`, {
+                    method: "GET",
+                    headers: { "Authorization": `Bearer ${token}` }
+                });
+        
+                if (!response.ok) {
+                    throw new Error("Ошибка при загрузке истории чата");
+                }
+        
+                const messages = await response.json();
+                const chatMessages = document.getElementById("chat-messages");
+                chatMessages.innerHTML = ""; // Очистка старых сообщений
+        
+                if (messages.length === 0) {
+                    chatMessages.innerHTML = "<p>Нет сообщений в этом чате</p>";
+                    return;
+                }
+        
+                messages.forEach((message) => {
+                    const messageElement = document.createElement("div");
+                    messageElement.classList.add("chat-message");
+                    messageElement.textContent = message.content; // Отображаем только контент сообщения
+                    chatMessages.appendChild(messageElement);
+                });
+        
+            } catch (error) {
+                console.error("❌ Ошибка при загрузке истории чата:", error);
+            }
+        }
+        
+        document.getElementById("close-chat-btn").addEventListener("click", function() {
+            document.getElementById("chat-modal").style.display = "none";
+            if (socket) {
+                socket.close();
+            }
+        });
+        
+        document.getElementById("send-chat-btn").addEventListener("click", function() {
+            const chatInput = document.getElementById("chat-input");
+            const messageContent = chatInput.value.trim();
+        
+            if (messageContent && socket) {
+                const userInfo = getUserInfoFromLocalStorage();
+                const message = {
+                    chatId: currentChatId,
+                    content: messageContent,
+                    sender_id: userInfo.userId,
+                    username: userInfo.username
+                };
+        
+                socket.send(JSON.stringify(message));
+                chatInput.value = "";
+            }
+        });
+        
+
+        function getUserInfoFromLocalStorage() {
+            const token = localStorage.getItem("jwt");
+            if (!token) {
+                console.log("❌ Токен не найден");
+                return null;
+            }
+
+            try {
+                const claims = JSON.parse(atob(token.split('.')[1]));
+                return {
+                    userId: claims.id,
+                    username: claims.username
+                };
+            } catch (e) {
+                console.error("Ошибка при декодировании токена:", e);
+                return null;
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            loadChats();
+        });
+
         async function loadChats() {
             const token = localStorage.getItem("jwt");
             if (!token) {
                 console.log("❌ Токен отсутствует");
                 return;
             }
-    
+        
             try {
                 const response = await fetch(`${API_BASE}/get_chats`, {
                     method: "GET",
                     headers: { "Authorization": `Bearer ${token}` }
                 });
-    
+        
                 if (!response.ok) {
                     throw new Error("Ошибка при загрузке чатов");
                 }
-    
+        
                 const chats = await response.json();
-                console.log("🔹 Загруженные чаты:", chats);
-    
                 const chatList = document.getElementById("chat-list");
-                chatList.innerHTML = ""; // Очищаем список перед добавлением
-    
+                chatList.innerHTML = "";
+        
                 if (chats.length === 0) {
                     chatList.innerHTML = "<p>Нет активных чатов</p>";
                     return;
                 }
-    
+        
                 chats.forEach(chat => {
                     const chatCard = document.createElement("div");
                     chatCard.classList.add("chat-card");
-                    chatCard.dataset.chatId = chat.id; // Запоминаем ID чата для кликов в будущем
+                    chatCard.dataset.chatId = chat.id;
                     chatCard.innerHTML = `
                         <h3>${chat.title}</h3>
                         <p>Статус: ${chat.status === "active" ? "🟢 Активный" : "🔴 Закрыт"}</p>
                     `;
+                    
+                    // При клике по карточке открываем чат (например, в модальном окне)
+                    chatCard.addEventListener("click", function() {
+                        openChat(chat.id, chat.title);
+                    });
+                    
+                    // Если чат активный, добавляем кнопку для его закрытия
+                    if (chat.status === "active") {
+                        const closeBtn = document.createElement("button");
+                        closeBtn.textContent = "Закрыть чат";
+                        closeBtn.addEventListener("click", function(e) {
+                            e.stopPropagation(); // чтобы не срабатывал openChat
+                            closeChat(chat.id);
+                        });
+                        chatCard.appendChild(closeBtn);
+                    }
+                    
                     chatList.appendChild(chatCard);
                 });
             } catch (error) {
                 console.error("❌ Ошибка при загрузке чатов:", error);
             }
         }
-    
-        document.addEventListener("DOMContentLoaded", function() {
-            fetchUserInfo(); // Загружаем информацию о пользователе
-            loadChats(); // Загружаем чаты
-        });
+        
+        async function closeChat(chatId) {
+            const token = localStorage.getItem("jwt");
+            if (!token) {
+                console.error("❌ Токен отсутствует");
+                return;
+            }
+        
+            try {
+                const response = await fetch(`${API_BASE}/close_chat?chat_id=${chatId}`, {
+                    method: "POST", // можно также использовать PATCH
+                    headers: {
+                        "Authorization": `Bearer ${token}`
+                    }
+                });
+        
+                if (!response.ok) {
+                    throw new Error("Ошибка при закрытии чата");
+                }
+        
+                const data = await response.json();
+                console.log("✅", data.message);
+                // Обновляем список чатов, чтобы закрытый чат исчез из видимого списка
+                loadChats();
+            } catch (error) {
+                console.error("❌ Ошибка при закрытии чата:", error);
+            }
+        }
+        
+
+        
     </script>
 </body>
 </html>
