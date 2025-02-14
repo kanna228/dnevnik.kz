@@ -158,3 +158,107 @@ header nav ul li a:hover {
     font-size: 14px;
     color: #555;
 }
+
+/* Стили для модального окна чата */
+.chat-modal {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* Темный фон */
+}
+
+/* Стили для контента модального окна */
+.chat-modal-content {
+    background-color: #ffffff;
+    margin: 10% auto;
+    padding: 20px;
+    border-radius: 10px;
+    width: 80%;
+    max-width: 600px;
+    box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.1); /* Тень вокруг */
+}
+
+/* Заголовок чата */
+#chat-title {
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 15px;
+}
+
+/* Блок с сообщениями */
+.chat-messages {
+    max-height: 300px;
+    overflow-y: auto;
+    margin-bottom: 15px;
+    padding-right: 5px;
+    font-family: Arial, sans-serif;
+    color: #333;
+}
+
+/* Индивидуальные сообщения */
+.chat-message {
+    background-color: #f1f1f1;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    max-width: 75%;
+    word-wrap: break-word;
+    box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Стиль для входящих сообщений */
+.chat-message.sent {
+    background-color: #d1e7dd;
+    align-self: flex-start;
+    margin-left: 20px;
+}
+
+/* Стиль для исходящих сообщений */
+.chat-message.received {
+    background-color: #f8d7da;
+    align-self: flex-end;
+    margin-right: 20px;
+}
+
+/* Ввод сообщения */
+#chat-input {
+    width: 75%;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+    margin-right: 10px;
+    font-size: 14px;
+}
+
+#send-chat-btn {
+    padding: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    border: none;
+    background-color: #0073e6;
+    color: white;
+}
+
+#send-chat-btn:hover {
+    background-color: #005bb5;
+}
+
+/* Кнопка для закрытия чата */
+.close-btn {
+    color: #aaa;
+    font-size: 28px;
+    font-weight: bold;
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    cursor: pointer;
+}
+
+.close-btn:hover {
+    color: black;
+}
+
