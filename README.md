@@ -1,93 +1,80 @@
-Dnevnik.kz is a web-based portal designed to assist students and teachers by providing a centralized platform for managing lessons, student accounts, and educational activities. This project was developed to simplify the organization of educational workflows while allowing users to log in and view relevant content based on their roles (Student or Teacher).
+# Dnevnik.kz
+
+Dnevnik.kz is a comprehensive web portal that simplifies the educational process by uniting students and teachers on a single platform. The application allows for secure user registration, role-based access, real-time communication, and several integrated services designed to enhance both teaching and learning experiences.
 
 ---
 
-## Project Goal
-The goal of Dnevnik.kz is to create an easy-to-use web application where:
-- Students can access their class schedules and related materials.
-- Teachers can manage lesson plans and student activities.
-- Users can log in as either a **Student** or **Teacher** with personalized views for each role.
+## Project Goals
 
-The project streamlines communication and content delivery between students and educators.
+- **For Students:**
+  - Access schedules and educational materials.
+  - Communicate in real time with teachers using WebSocket.
+
+- **For Teachers:**
+  - Manage lesson plans and perform CRUD operations on user data.
+  - Access an exclusive admin dashboard to send emails (with file attachments) and handle advanced tasks.
+
+- **General Features:**
+  - User registration requires email confirmation.
+  - Secure login via JSON Web Token (JWT) authentication.
+  - Purchase Olympiad tickets through an integrated microservice available on the main screen.
 
 ---
 
 ## Features
-- **Role-Based Login**: Users can register or log in as a student or teacher.
-- **Schedules**: Teachers can publish class schedules that are visible to students.
-- **User-Friendly Interface**: Clean navigation for students and teachers.
-- **Database Integration**: MongoDB is used for storing user information (students, teachers).
-- **Backend API**: Developed using Go (Golang) for efficient handling of requests and data processing.
 
----
+- **User Management (CRUD):**  
+  Create, read, update, and delete operations for both student and teacher profiles. All user data is stored in the database, which connects automatically on the server.
 
-## Team Members
-The project was developed by:
-1. **Abdimanap Diaz**
-2. **Abdyhalyk Diaz**
-3. **Dildahan Zhandos**
+- **Email Confirmation:**  
+  New users must confirm their email address during registration.
 
----
+- **JWT Authentication:**  
+  Secure login system using JSON Web Tokens to protect user sessions.
 
-## Screenshot
-![image](https://github.com/user-attachments/assets/e6b8d9ba-4cec-496b-8bc1-bb5908b855ab)
+- **Role-Based Access Control:**  
+  Users register as either a **Student** or **Teacher**. Teachers gain access to an exclusive admin dashboard.
+
+- **Admin Dashboard (Teachers Only):**  
+  Teachers can send emails (with file attachments) and manage additional administrative tasks.
+
+- **Olympiad Ticket Microservice:**  
+  Purchase Olympiad tickets directly from the main screen.
+
+- **Real-Time Communication:**  
+  Communicate instantly via WebSocket, enabling direct messaging between students and teachers.
 
 ---
 
 ## Tech Stack
-The following tools and technologies were used to develop Dnevnik.kz:
-- **Go (Golang)**: For backend server implementation.
-- **MongoDB**: NoSQL database for storing users and schedules.
-- **HTML/CSS/JavaScript**: Frontend for creating the user interface.
-- **Fetch API**: For communication between the client and server.
-- **Net/http Package**: For handling HTTP requests and responses in Go.
+
+- **Go (Golang):** Backend server and API implementation.
+- **MongoDB:** NoSQL database (automatically connected on the server).
+- **HTML/CSS/JavaScript:** Frontend development for a user-friendly interface.
+- **JWT:** Secure user authentication.
+- **WebSocket:** Real-time communication between users.
+- **Fetch API:** Client-server interaction.
+- **Email Service:** For email confirmations and sending messages with attachments.
+- **Microservice Architecture:** Manages the purchase of Olympiad tickets.
 
 ---
 
-## How to Run the Project
-Follow the steps below to set up and run the Dnevnik.kz project on your local machine:
+## Installation and Running
 
-### 1. Prerequisites
-- Go (Golang) must be installed. [Download here](https://go.dev/dl/)
-- MongoDB server must be running locally or remotely. [Download here](https://www.mongodb.com/try/download/community)
+1. **Clone the Repository:**
+   ```bash
+   git clone https://github.com/kanna228/dnevnik.kz.git
+   cd dnevnik.kz
+1. **Run the Application: Execute the following command to start the server:**
+   go run .
 
-### 2. Clone the Repository
-```bash
-git clone https://github.com/kanna228/dnevnik.kz.git
-cd dnevnik.kz
-```
+**Team and Contact**
+    Project Team:
 
-### 3. Set Up MongoDB
-- Start your MongoDB server.
-- Ensure the database name and connection details are correctly configured in the Go backend.
+    Abdimanap Diaz
+    Abdyhalyk Diaz
+    Dildahan Zhandos
 
-### 4. Start the Backend Server
-Run the Go server:
-```bash
-go run main.go db.go
-```
-The server will start at `http://localhost:8080`.
+**For any inquiries or support, please contact us via Telegram: @mirsjex**
 
-
-### 5. Interact with the Application
-- Access `http://localhost:8080` to test the backend API.
-- Use the frontend UI to:
-    - Register as a **Student** or **Teacher**.
-    - Log in and view personalized content (e.g., schedules).
-
----
-
-## Resources and References
-- [Golang Documentation](https://go.dev/doc/)
-- [MongoDB Documentation](https://www.mongodb.com/docs/)
-- [HTML/CSS/JS Basics](https://developer.mozilla.org/)
-
----
-
-## Contact
-For any inquiries or issues regarding the project, please contact the development team:
-tg @mirsjex
-
----
-
-Thank you for using **Dnevnik.kz**!
+**Thank you for choosing Dnevnik.kz!**

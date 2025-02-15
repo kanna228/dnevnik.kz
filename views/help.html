@@ -132,12 +132,16 @@
         let currentChatId = null;
         
         async function openChat(chatId, chatTitle) {
+            // Если уже есть активное соединение, закрываем его
+            if (socket) {
+                socket.close();
+                socket = null;
+            }
+            
+            currentChatId = chatId;
             document.getElementById("chat-modal").style.display = "block";
             document.getElementById("chat-title").innerText = chatTitle;
         
-            currentChatId = chatId;
-        
-            // Подключаем WebSocket для текущего чата
             socket = new WebSocket(`ws://localhost:8080/ws?chat_id=${chatId}`);
         
             socket.onopen = () => {
@@ -147,20 +151,17 @@
             socket.onmessage = (event) => {
                 const message = JSON.parse(event.data);
                 const chatMessages = document.getElementById("chat-messages");
-        
                 const messageElement = document.createElement("div");
                 messageElement.classList.add("chat-message");
         
                 if (message.sender_id === localStorage.getItem("user_id")) {
-                    messageElement.classList.add("sent"); // Это ваше сообщение
+                    // Учитель (или студент) увидит своё сообщение со стилем sent
+                    messageElement.classList.add("sent");
                 } else {
-                    messageElement.classList.add("received"); // Сообщение от другого пользователя
+                    messageElement.classList.add("received");
                 }
-        
                 messageElement.textContent = message.content;
                 chatMessages.appendChild(messageElement);
-        
-                // Прокручиваем чат вниз, чтобы новое сообщение было видно
                 chatMessages.scrollTop = chatMessages.scrollHeight;
             };
         
@@ -168,7 +169,7 @@
                 console.log("❌ WebSocket disconnected");
             };
         
-            // Загружаем историю сообщений из базы данных
+            // Загружаем историю сообщений для текущего чата
             loadChatHistory(chatId);
         }
         
@@ -212,9 +213,6 @@
         
         document.getElementById("close-chat-btn").addEventListener("click", function() {
             document.getElementById("chat-modal").style.display = "none";
-            if (socket) {
-                socket.close();
-            }
         });
         
         document.getElementById("send-chat-btn").addEventListener("click", function() {
